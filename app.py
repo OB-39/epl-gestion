@@ -200,9 +200,9 @@ get_session_state()
 # --- BARRE LATÉRALE (NAVIGATION) ---
 with st.sidebar:
     # Logo
-    st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=140)
+    st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=140)
     st.markdown("### EPL - Gestion Présence")
-    st.caption("Année Académique 2024-2025")
+    st.caption("Année Académique 2025-2026")
     
     # Menu Principal de Navigation
     app_mode = option_menu(
@@ -219,7 +219,7 @@ with st.sidebar:
     )
     
     st.divider()
-    st.markdown("Made with ❤️ for **EPL**")
+    st.markdown("conçu par OB")
 
 
 # =========================================================
@@ -589,3 +589,4 @@ elif app_mode == "Espace Staff":
             df = pd.DataFrame(get_global_stats())
             # Affichage corrigé sans paramètre invalide
             st.dataframe(df, use_container_width=True, hide_index=True)
+
