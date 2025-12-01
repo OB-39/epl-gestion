@@ -20,91 +20,124 @@ st.set_page_config(
 # --- CSS PREMIUM & DESIGN SYSTEM ---
 st.markdown("""
 <style>
-    /* 1. TYPOGRAPHIE & COULEURS GLOBALES */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    /* IMPORTS & VARIABLES */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
     
+    :root {
+        --primary: #0f172a; /* Bleu Nuit très sombre (Presque noir) */
+        --accent: #2563eb;  /* Bleu Royal (Boutons/Liens) */
+        --bg-light: #f8fafc; /* Gris très pâle */
+        --text-dark: #1e293b; /* Texte principal */
+        --text-light: #64748b; /* Texte secondaire */
+        --card-bg: #ffffff;
+    }
+
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
-        color: #1e293b; 
-    }
-    
-    /* 2. ARRIÈRE-PLAN MODERNE */
-    .stApp {
-        background-color: #f8fafc; /* Gris très pâle bleuté */
-        background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-        background-size: 20px 20px; /* Effet "Papier millimétré" subtil */
+        color: var(--text-dark);
+        background-color: var(--bg-light);
     }
 
-    /* 3. HERO SECTION (BANNIÈRE) */
+    /* 1. HERO SECTION (Bannière) RESPONSIVE */
     .hero-container {
-        background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
-        padding: 4rem 2rem;
-        border-radius: 0 0 2rem 2rem;
-        color: white;
+        background-color: var(--card-bg);
+        border-bottom: 1px solid #e2e8f0;
+        padding: 3rem 1rem;
+        margin: -6rem -4rem 2rem -4rem; /* S'étend sur les bords */
         text-align: center;
-        box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);
-        margin: -6rem -4rem 2rem -4rem; /* Pour coller aux bords */
     }
+    /* Sur mobile, on réduit les marges négatives */
+    @media (max-width: 768px) {
+        .hero-container {
+            margin: -2rem -1rem 1rem -1rem;
+            padding: 2rem 1rem;
+        }
+        h1 { font-size: 1.8rem !important; }
+    }
+
     .hero-title {
-        font-size: 3.5rem;
+        color: var(--primary);
+        font-size: 2.5rem;
         font-weight: 800;
-        margin-bottom: 1rem;
-        letter-spacing: -1px;
+        letter-spacing: -0.05rem;
+        margin-bottom: 0.5rem;
     }
     .hero-subtitle {
-        font-size: 1.2rem;
-        opacity: 0.9;
-        font-weight: 400;
+        color: var(--text-light);
+        font-size: 1.1rem;
         max-width: 600px;
         margin: 0 auto;
+        line-height: 1.6;
     }
 
-    /* 4. CARTES & CONTENEURS */
+    /* 2. CARTES MODERNES (Box Shadow subtil) */
     .metric-card {
-        background: white;
-        border-radius: 16px;
+        background: var(--card-bg);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
         padding: 24px;
-        border: 1px solid #f1f5f9;
+        text-align: center;
+        transition: all 0.3s ease;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .metric-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        border-color: #bfdbfe;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        border-color: var(--accent);
     }
 
-    /* 5. CHAMPS DE SAISIE STYLISÉS */
+    /* 3. INPUTS & BOUTONS */
     .stTextInput input {
-        border-radius: 12px;
-        border: 2px solid #e2e8f0;
-        padding: 12px 20px;
-        font-size: 1rem;
-        transition: all 0.3s;
+        background-color: white;
+        color: var(--text-dark);
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px 15px;
     }
     .stTextInput input:focus {
-        border-color: #2563EB;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
     }
-
-    /* 6. BOUTONS PRIMAIRES */
+    
     .stButton>button {
-        background: linear-gradient(to right, #1E3A8A, #2563EB);
+        background-color: var(--primary);
         color: white;
         border: none;
-        border-radius: 12px;
-        padding: 12px 24px;
+        border-radius: 8px;
+        padding: 0.6rem 1.2rem;
         font-weight: 600;
-        letter-spacing: 0.5px;
-        transition: all 0.3s;
+        width: 100%;
+        transition: background-color 0.2s;
     }
     .stButton>button:hover {
-        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
-        transform: scale(1.02);
+        background-color: var(--accent);
+        color: white;
+    }
+
+    /* 4. VISIBILITÉ TEXTE & TITRES */
+    h1, h2, h3 {
+        color: var(--primary) !important;
+    }
+    p, label, span {
+        color: var(--text-dark);
+    }
+    /* Les petites métriques (delta) */
+    div[data-testid="stMetricValue"] {
+        color: var(--primary);
+    }
+    
+    /* 5. TAGS FILIÈRE (Style Badge) */
+    .stream-badge {
+        background-color: #f1f5f9;
+        color: var(--primary);
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
     }
 </style>
 """, unsafe_allow_html=True)
-
 # ==============================================================================
 # 2. SÉCURITÉ & CONNEXION BDD
 # ==============================================================================
@@ -627,6 +660,7 @@ elif app_mode == "Espace Staff":
             df = pd.DataFrame(get_global_stats())
             # Affichage corrigé sans paramètre invalide
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
 
 
