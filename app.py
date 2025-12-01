@@ -188,138 +188,195 @@ with st.sidebar:
 # MODE 1 : ESPACE ÉTUDIANT (PUBLIC)
 # =========================================================
 # =========================================================
-# MODE 1 : ESPACE ÉTUDIANT (PUBLIC) - VERSION MODERNISÉE
+# MODE 1 : ESPACE ÉTUDIANT (PUBLIC) - VERSION PROFILE AVANCEE
 # =========================================================
 if app_mode == "Espace Étudiant":
     st.markdown("# 🎓 Mon Espace")
-    st.markdown("Consultez votre profil et vos statistiques de présence en temps réel.")
+    st.markdown("Consultez votre identité numérique et vos performances.")
     
-    # Barre de recherche flottante
+    # Barre de recherche (Style Neumorphism)
     with st.container(border=True):
         col_s1, col_s2 = st.columns([4, 1])
         with col_s1:
-            search = st.text_input("Recherche", placeholder="Entrez votre Matricule (ex: LF-LT-001) ou Nom", label_visibility="collapsed")
+            search = st.text_input("Identification", placeholder="Matricule (ex: LF-LT-001) ou Nom de famille", label_visibility="collapsed")
         with col_s2:
-            st.write("") # Spacer alignement
+            st.write("") # Spacer
 
     if search:
-        with st.spinner("Chargement du profil..."):
-            results = get_student_details(search.strip())
-            time.sleep(0.3)
+        with st.spinner("Synchronisation du profil..."):
+            # 1. Récupération des Stats
+            stats_results = get_student_details(search.strip())
+            time.sleep(0.4) # Effet de chargement
             
-            if results:
-                for student in results:
-                    # Calcul des initiales pour l'avatar
-                    initials = f"{student['first_name'][0]}{student['last_name'][0]}".upper()
-                    
-                    # --- 1. CARTE D'IDENTITÉ AVEC AVATAR ---
+            if stats_results:
+                for student in stats_results:
+                    # 2. Récupération des infos personnelles (Genre, Tel, Email) via ID
+                    # On fait une requête spécifique pour obtenir les détails manquants dans la vue stats
+                    try:
+                        details_req = supabase.table('students').select("gender, phone, email").eq('id', student['student_id']).single().execute()
+                        details = details_req.data
+                        gender = details.get('gender', 'M') # Par défaut M si non trouvé
+                        phone = details.get('phone') or "Non renseigné"
+                        email = details.get('email') or "Non renseigné"
+                    except:
+                        gender = 'M'
+                        phone = "Non disponible"
+                        email = "Non disponible"
+
+                    # 3. Configuration du Design selon le Genre
+                    if gender == 'F':
+                        avatar_style = "micah" # Style plus doux/féminin
+                        # Génération d'avatar femme
+                        avatar_url = f"https://api.dicebear.com/9.x/micah/svg?seed={student['first_name']}&baseColor=f472b6&mouth=smile&hair=pixie"
+                        theme_color = "#db2777" # Pink 600
+                        bg_gradient = "linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%)"
+                    else:
+                        avatar_style = "micah"
+                        # Génération d'avatar homme
+                        avatar_url = f"https://api.dicebear.com/9.x/micah/svg?seed={student['last_name']}&baseColor=60a5fa&mouth=smile&hair=fonze"
+                        theme_color = "#2563eb" # Blue 600
+                        bg_gradient = "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)"
+
+                    # --- BLOC : CARTE D'IDENTITÉ MODERNE ---
                     st.markdown(f"""
                     <style>
-                        .profile-card {{
+                        .id-card-container {{
                             background-color: white;
-                            border-radius: 16px;
-                            padding: 24px;
-                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-                            border: 1px solid #f1f5f9;
-                            margin-bottom: 20px;
+                            border-radius: 20px;
+                            padding: 0;
+                            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+                            margin-bottom: 25px;
+                            overflow: hidden;
+                            border: 1px solid #e2e8f0;
+                        }}
+                        .id-card-header {{
+                            background: {bg_gradient};
+                            padding: 30px 20px;
                             display: flex;
                             align-items: center;
-                            gap: 24px;
+                            gap: 20px;
+                            border-bottom: 1px solid rgba(0,0,0,0.05);
                         }}
-                        .avatar {{
-                            width: 80px;
-                            height: 80px;
-                            background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+                        .id-avatar {{
+                            width: 90px;
+                            height: 90px;
+                            background-color: white;
                             border-radius: 50%;
+                            padding: 4px;
+                            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                        }}
+                        .id-info h2 {{
+                            margin: 0;
+                            color: #1e293b;
+                            font-family: 'Segoe UI', sans-serif;
+                            font-size: 1.8rem;
+                        }}
+                        .id-tag {{
+                            background-color: white;
+                            color: {theme_color};
+                            padding: 4px 12px;
+                            border-radius: 20px;
+                            font-size: 0.8rem;
+                            font-weight: 700;
+                            display: inline-block;
+                            margin-top: 8px;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                        }}
+                        .contact-row {{
+                            padding: 20px;
+                            display: flex;
+                            justify-content: space-around;
+                            flex-wrap: wrap;
+                            gap: 15px;
+                        }}
+                        .contact-item {{
                             display: flex;
                             align-items: center;
-                            justify-content: center;
-                            color: white;
-                            font-size: 28px;
-                            font-weight: 700;
-                            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
-                        }}
-                        .info-badge {{
-                            background-color: #f1f5f9;
-                            color: #475569;
-                            padding: 4px 12px;
-                            border-radius: 9999px;
-                            font-size: 0.85rem;
-                            font-weight: 600;
-                            display: inline-block;
-                            margin-right: 8px;
-                        }}
-                        .stream-badge {{
-                            background-color: #eff6ff;
-                            color: #1d4ed8;
+                            gap: 10px;
+                            color: #64748b;
+                            font-size: 0.95rem;
+                            background: #f8fafc;
+                            padding: 8px 16px;
+                            border-radius: 8px;
+                            border: 1px solid #f1f5f9;
                         }}
                     </style>
                     
-                    <div class="profile-card">
-                        <div class="avatar">{initials}</div>
-                        <div>
-                            <h2 style="margin: 0; color: #1e293b; font-size: 1.8rem; font-family: 'Segoe UI', sans-serif;">
-                                {student['first_name']} <span style="font-weight: 800;">{student['last_name']}</span>
-                            </h2>
-                            <div style="margin-top: 10px;">
-                                <span class="info-badge stream-badge">Filière {student['stream']}</span>
-                                <span class="info-badge">🆔 {student['student_id']}</span>
+                    <div class="id-card-container">
+                        <div class="id-card-header">
+                            <img src="{avatar_url}" class="id-avatar" alt="Avatar">
+                            <div class="id-info">
+                                <h2>{student['first_name']} <span style="font-weight:800;">{student['last_name']}</span></h2>
+                                <span class="id-tag">{student['stream']}</span>
+                                <span class="id-tag" style="color: #64748b;">#{student['student_id']}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-row">
+                            <div class="contact-item">
+                                <span style="font-size: 1.2rem;">📞</span> 
+                                <span>{phone}</span>
+                            </div>
+                            <div class="contact-item">
+                                <span style="font-size: 1.2rem;">📧</span> 
+                                <span>{email if len(email) > 3 else "Aucun email"}</span>
+                            </div>
+                            <div class="contact-item">
+                                <span style="font-size: 1.2rem;">🎂</span> 
+                                <span>{gender}</span>
                             </div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
 
-                    # --- 2. STATISTIQUES EN COLONNES ---
+                    # --- SECTION STATS (Déjà existante mais rafraîchie) ---
                     c1, c2, c3 = st.columns([1, 1, 1.2])
 
-                    # Taux de présence
                     with c1:
-                        st.markdown("""
-                        <div style="background:white; padding:20px; border-radius:12px; border:1px solid #e2e8f0; text-align:center; height:100%;">
-                            <div style="color:#64748B; font-size:0.9rem; font-weight:600; text-transform:uppercase; margin-bottom:5px;">Assiduité</div>
-                            <div style="font-size:2.5rem; font-weight:800; color:#1E3A8A;">
-                                {0}%
+                        # KPI Présence
+                        st.markdown(f"""
+                        <div style="background:white; padding:20px; border-radius:16px; border:1px solid #e2e8f0; text-align:center;">
+                            <div style="color:#94a3b8; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Taux de Présence</div>
+                            <div style="font-size:2.8rem; font-weight:800; color:{theme_color}; margin: 5px 0;">
+                                {student['attendance_percentage']}%
+                            </div>
+                            <div style="height:6px; width:100%; background:#f1f5f9; border-radius:3px; overflow:hidden;">
+                                <div style="height:100%; width:{student['attendance_percentage']}%; background:{theme_color};"></div>
                             </div>
                         </div>
-                        """.format(student['attendance_percentage']), unsafe_allow_html=True)
-                        
-                        # Barre de progression native Streamlit en dessous
-                        st.write("")
-                        val_float = float(student['attendance_percentage']) / 100
-                        st.progress(val_float)
+                        """, unsafe_allow_html=True)
 
-                    # Compteur Absences
                     with c2:
-                        st.markdown("""
-                        <div style="background:white; padding:20px; border-radius:12px; border:1px solid #e2e8f0; text-align:center; height:100%;">
-                            <div style="color:#64748B; font-size:0.9rem; font-weight:600; text-transform:uppercase; margin-bottom:5px;">Absences</div>
-                            <div style="font-size:2.5rem; font-weight:800; color:#ef4444;">
-                                {0}
+                        # KPI Absences
+                        st.markdown(f"""
+                        <div style="background:white; padding:20px; border-radius:16px; border:1px solid #e2e8f0; text-align:center;">
+                            <div style="color:#94a3b8; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Absences Totales</div>
+                            <div style="font-size:2.8rem; font-weight:800; color:#ef4444; margin: 5px 0;">
+                                {student['absent_count']}
                             </div>
-                            <div style="font-size:0.8rem; color:#94a3b8;">sur {1} cours total</div>
+                            <div style="font-size:0.85rem; color:#64748b;">sur {student['total_sessions']} cours dispensés</div>
                         </div>
-                        """.format(student['absent_count'], student['total_sessions']), unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
 
-                    # Graphique Donut (Couleurs Modernes)
                     with c3:
+                        # Chart
                         with st.container(border=True):
                             source = pd.DataFrame({
                                 "État": ["Présent", "Absent"],
                                 "Valeur": [student['present_count'], student['absent_count']]
                             })
                             
-                            # Palette moderne : Emerald (Succès) & Rose (Danger)
+                            color_range = ["#10b981", "#ef4444"] # Vert / Rouge standard
+                            
                             base = alt.Chart(source).encode(theta=alt.Theta("Valeur", stack=True))
-                            pie = base.mark_arc(innerRadius=40, outerRadius=70).encode(
-                                color=alt.Color("État", 
-                                    scale=alt.Scale(domain=["Présent", "Absent"], range=["#10b981", "#f43f5e"]),
-                                    legend=alt.Legend(orient="bottom", title=None)
-                                ),
+                            pie = base.mark_arc(innerRadius=45, outerRadius=75).encode(
+                                color=alt.Color("État", scale=alt.Scale(domain=["Présent", "Absent"], range=color_range), legend=None),
                                 tooltip=["État", "Valeur"]
                             )
                             st.altair_chart(pie, use_container_width=True)
+
             else:
-                st.warning("🔍 Aucun étudiant trouvé avec ces informations. Vérifiez le matricule.")
+                st.warning("🔍 Aucun résultat. Vérifiez votre matricule.")
 
 # =========================================================
 # MODE 2 : ESPACE STAFF (PRIVÉ & SÉCURISÉ)
@@ -518,4 +575,5 @@ elif app_mode == "Espace Staff":
             st.title("🔎 Explorateur de Données")
             df = pd.DataFrame(get_global_stats())
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
