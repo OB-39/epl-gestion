@@ -380,4 +380,11 @@ elif selected == "Explorer les Données":
     st.title("🔎 Explorateur de Données")
     # Table brute interactive
     df = pd.DataFrame(get_global_stats())
-    st.dataframe(df, use_container_width=True, filter_button=True)
+    
+    # CORRECTION ICI : On retire 'filter_button=True' qui causait l'erreur
+    st.dataframe(
+        df, 
+        use_container_width=True,
+        hide_index=True 
+    )
+
