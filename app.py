@@ -7,15 +7,59 @@ from streamlit_option_menu import option_menu
 import altair as alt
 
 # --- 1. CONFIGURATION ET SÉCURITÉ ---
-st.set_page_config(page_title="EPL - Master Panel", page_icon="🛡️", layout="wide")
+st.set_page_config(
+    page_title="EPL - Portail de Présence", 
+    page_icon="🎓", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# --- CSS MODERNE ---
+# --- THEME & CSS MODERNE ---
 st.markdown("""
 <style>
-    .metric-card { background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; margin-bottom: 10px; }
-    .stButton>button { border-radius: 8px; font-weight: bold; }
-    h1, h2, h3 { color: #1E3A8A; }
-    div[data-testid="stMetricValue"] { color: #1E3A8A; font-size: 24px; }
+    /* Palette de couleurs EPL: Bleu Nuit (#1E3A8A) et Blanc */
+    :root {
+        --primary-color: #1E3A8A;
+        --background-light: #F8FAFC;
+    }
+    
+    .main {
+        background-color: var(--background-light);
+    }
+    
+    /* Cards stylisées */
+    .css-card {
+        border-radius: 12px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border: 1px solid #E2E8F0;
+        margin-bottom: 1rem;
+    }
+    
+    /* Titres */
+    h1, h2, h3 {
+        font-family: 'Segoe UI', sans-serif;
+        color: #0F172A;
+        font-weight: 700;
+    }
+    
+    h1 { margin-bottom: 0.5rem; }
+    
+    /* Métriques personnalisées */
+    .stat-label { font-size: 0.9rem; color: #64748B; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 2rem; color: #1E3A8A; font-weight: 800; }
+    
+    /* Boutons */
+    .stButton>button {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .stButton>button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -38,7 +82,7 @@ try:
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
     SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 except:
-    st.error("Clés Supabase manquantes dans .streamlit/secrets.toml")
+    st.error("⚠️ Configuration manquante : Vérifiez .streamlit/secrets.toml")
     st.stop()
 
 @st.cache_resource
@@ -47,7 +91,7 @@ def init_connection():
 
 supabase = init_connection()
 
-# --- 4. FONCTIONS MÉTIER ---
+# --- 4. FONCTIONS MÉTIER (INCHANGÉES) ---
 
 def get_session_state():
     if 'user_role' not in st.session_state: st.session_state['user_role'] = None
@@ -68,23 +112,18 @@ def login(password):
         return True
     return False
 
-# Récupération données classiques
 def get_courses(stream):
     return supabase.table('courses').select("*").eq('stream_target', stream).execute().data
 
 def get_students(stream):
     return supabase.table('students').select("*").eq('stream', stream).order('last_name').execute().data
 
-# Récupération stats individuelles (Pour la partie publique)
 def get_student_details(search_term):
-    # Cherche par ID exact
     response = supabase.from_('student_stats').select("*").eq('student_id', search_term).execute()
-    # Si pas trouvé, cherche par nom
     if not response.data:
         response = supabase.from_('student_stats').select("*").ilike('last_name', f"%{search_term}%").execute()
     return response.data
 
-# Sauvegarde Appel (Délégué)
 def save_attendance(course_id, date, present_ids, all_students):
     try:
         sess = supabase.table('sessions').insert({"course_id": course_id, "date_time": date.isoformat()}).execute()
@@ -96,7 +135,6 @@ def save_attendance(course_id, date, present_ids, all_students):
         st.error(f"Erreur DB: {e}")
         return False
 
-# Fonctions Super Admin & Stats
 def get_past_sessions(stream):
     courses = get_courses(stream)
     course_ids = [c['id'] for c in courses]
@@ -119,104 +157,129 @@ def update_attendance_correction(session_id, updated_presence_map, all_students)
 def get_global_stats():
     return supabase.from_('student_stats').select("*").execute().data
 
-# --- 5. LOGIQUE D'INTERFACE PRINCIPALE ---
+# --- 5. INTERFACE UTILISATEUR PRINCIPALE ---
 get_session_state()
 
-# Navigation Principale (Sidebar)
+# -- Sidebar Moderne --
 with st.sidebar:
-    st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=120)
+    st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=100)
+    st.markdown("### École Polytechnique de Lomé")
+    st.markdown("<div style='font-size: 0.8rem; color: gray; margin-bottom: 20px;'>Gestion de Présence • L2</div>", unsafe_allow_html=True)
     
-    # Choix du Mode : Public ou Privé
     app_mode = option_menu(
         "Navigation", 
         ["Espace Étudiant", "Espace Staff"],
-        icons=["person-circle", "lock-fill"],
+        icons=["mortarboard", "shield-lock"],
         menu_icon="list",
         default_index=0,
-        styles={"nav-link-selected": {"background-color": "#1E3A8A"}}
+        styles={
+            "container": {"padding": "0!important", "background-color": "transparent"},
+            "icon": {"color": "#1E3A8A", "font-size": "16px"}, 
+            "nav-link": {"font-size": "14px", "text-align": "left", "margin":"0px", "--hover-color": "#eee"},
+            "nav-link-selected": {"background-color": "#1E3A8A", "color": "white"},
+        }
     )
+    
+    st.divider()
+    if st.session_state['user_role']:
+         st.caption(f"👤 Connecté: **{st.session_state['user_role']}**")
 
 # =========================================================
 # MODE 1 : ESPACE ÉTUDIANT (PUBLIC)
 # =========================================================
 if app_mode == "Espace Étudiant":
-    st.title("🎓 Mon Portail de Présence")
-    st.info("Consultez vos statistiques en temps réel.")
+    st.markdown("# 🎓 Portail Étudiant")
+    st.markdown("Suivez votre assiduité en temps réel. Entrez vos identifiants ci-dessous.")
     
-    col_s1, col_s2 = st.columns([2, 1])
-    with col_s1:
-        search = st.text_input("🔍 Entrez votre Matricule ou Nom :", placeholder="Ex: LF-LT-001")
-    
+    with st.container(border=True):
+        col_s1, col_s2 = st.columns([3, 1])
+        with col_s1:
+            search = st.text_input("Recherche", placeholder="Matricule (ex: LF-LT-001) ou Nom de famille", label_visibility="collapsed")
+        with col_s2:
+            st.write("") # Spacer
+            
     if search:
-        with st.spinner("Recherche..."):
+        with st.spinner("Recherche dans la base de données..."):
             results = get_student_details(search.strip())
             time.sleep(0.3)
             
             if results:
                 for student in results:
-                    st.success("Dossier trouvé !")
+                    st.success(f"Dossier trouvé : {student['first_name']} {student['last_name']}")
                     
-                    # Carte d'identité
-                    st.markdown(f"""
-                    <div class="metric-card">
-                        <h2 style="margin:0;">{student['first_name']} {student['last_name']}</h2>
-                        <p style="color:gray;">{student['stream']} | {student['student_id']}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Graphiques
-                    c1, c2, c3 = st.columns(3)
-                    with c1:
-                        st.metric("Taux de Présence", f"{student['attendance_percentage']}%")
-                        val = float(student['attendance_percentage']) / 100
-                        st.progress(val, text="Niveau de présence")
-                    
-                    with c2:
-                        st.metric("Absences", student['absent_count'], delta_color="inverse")
-                        st.metric("Cours Total", student['total_sessions'])
+                    # Layout Carte d'identité visuelle
+                    with st.container():
+                        # Header de la fiche
+                        st.markdown(f"""
+                        <div class="css-card" style="border-left: 5px solid #1E3A8A;">
+                            <h2 style="margin:0;">{student['first_name']} {student['last_name']}</h2>
+                            <p style="color:#64748B; margin:0;">{student['student_id']} • <b>{student['stream']}</b></p>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        # KPIs
+                        c1, c2, c3 = st.columns(3)
+                        with c1:
+                            st.markdown(f"""
+                            <div class="css-card" style="text-align:center;">
+                                <div class="stat-label">Taux de Présence</div>
+                                <div class="stat-value">{student['attendance_percentage']}%</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            st.progress(float(student['attendance_percentage']) / 100)
                         
-                    with c3:
-                        # Donut Chart
-                        source = pd.DataFrame({
-                            "État": ["Présent", "Absent"],
-                            "Valeur": [student['present_count'], student['absent_count']]
-                        })
-                        base = alt.Chart(source).encode(theta=alt.Theta("Valeur", stack=True))
-                        pie = base.mark_arc(outerRadius=45).encode(
-                            color=alt.Color("État", scale=alt.Scale(domain=["Présent", "Absent"], range=["#22c55e", "#ef4444"])),
-                            tooltip=["État", "Valeur"]
-                        )
-                        st.altair_chart(pie, use_container_width=True)
+                        with c2:
+                            st.markdown(f"""
+                            <div class="css-card" style="text-align:center;">
+                                <div class="stat-label">Absences</div>
+                                <div class="stat-value" style="color: #EF4444;">{student['absent_count']}</div>
+                                <div style="font-size:0.8rem; color:gray;">sur {student['total_sessions']} séances</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        with c3:
+                            # Chart Modernisé
+                            source = pd.DataFrame({
+                                "État": ["Présent", "Absent"],
+                                "Valeur": [student['present_count'], student['absent_count']]
+                            })
+                            
+                            base = alt.Chart(source).encode(theta=alt.Theta("Valeur", stack=True))
+                            pie = base.mark_arc(outerRadius=55, innerRadius=35).encode(
+                                color=alt.Color("État", scale=alt.Scale(domain=["Présent", "Absent"], range=["#22c55e", "#ef4444"]), legend=None),
+                                tooltip=["État", "Valeur"]
+                            )
+                            st.altair_chart(pie, use_container_width=True)
+
             else:
-                st.warning("Aucun étudiant trouvé.")
+                st.warning("Aucun dossier trouvé pour cette recherche.")
 
 # =========================================================
 # MODE 2 : ESPACE STAFF (PRIVÉ & SÉCURISÉ)
 # =========================================================
 elif app_mode == "Espace Staff":
     
-    # A. ÉCRAN DE CONNEXION (Si pas connecté)
+    # A. ÉCRAN DE CONNEXION
     if not st.session_state['user_role']:
-        st.title("🔐 Accès Réservé")
-        col1, col2, col3 = st.columns([1,1,1])
+        col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.markdown("### Identification")
-            pwd = st.text_input("Mot de passe", type="password")
-            if st.button("Se Connecter", type="primary"):
-                if login(pwd):
-                    st.success(f"Bienvenue {st.session_state['user_role']}")
-                    time.sleep(0.5)
-                    st.rerun()
-                else:
-                    st.error("Mot de passe invalide.")
+            with st.container(border=True):
+                st.markdown("<h3 style='text-align: center;'>🔐 Accès Réservé</h3>", unsafe_allow_html=True)
+                pwd = st.text_input("Mot de passe", type="password", placeholder="Entrez vos identifiants...")
+                
+                if st.button("Se Connecter", type="primary", use_container_width=True):
+                    if login(pwd):
+                        st.toast(f"Bienvenue {st.session_state['user_role']} !", icon="✅")
+                        time.sleep(0.5)
+                        st.rerun()
+                    else:
+                        st.error("Mot de passe invalide.")
     
-    # B. TABLEAU DE BORD (Si connecté)
+    # B. DASHBOARD STAFF
     else:
-        # Menu contextuel Staff
+        # Sous-menu Staff
         with st.sidebar:
-            st.divider()
-            st.write(f"Connecté en tant que : **{st.session_state['user_role']}**")
-            
+            st.markdown("---")
             staff_options = []
             if st.session_state['user_role'] == 'DELEGATE':
                 staff_options = ["Faire l'Appel"]
@@ -227,7 +290,14 @@ elif app_mode == "Espace Staff":
             
             staff_options.append("Déconnexion")
             
-            selected_staff = option_menu("Menu Staff", staff_options, icons=['grid', 'list-task', 'people', 'x-circle'], menu_icon="gear", default_index=0)
+            selected_staff = option_menu(
+                "Menu Actions", 
+                staff_options, 
+                icons=['pen', 'bar-chart', 'exclamation-triangle', 'table', 'box-arrow-right'], 
+                menu_icon="grid-fill", 
+                default_index=0,
+                styles={"nav-link": {"font-size": "13px"}}
+            )
             
             if selected_staff == "Déconnexion":
                 st.session_state['user_role'] = None
@@ -235,112 +305,149 @@ elif app_mode == "Espace Staff":
                 st.rerun()
 
         # --- LOGIQUE DÉLÉGUÉ / APPEL ---
-        if selected_staff == "Faire l'Appel" or selected_staff == "Faire l'Appel (Force)":
+        if selected_staff in ["Faire l'Appel", "Faire l'Appel (Force)"]:
             st.title("📝 Nouvelle Feuille de Présence")
-            if st.session_state['user_role'] == 'DELEGATE':
-                target_stream = st.session_state['user_scope']
-                st.info(f"Filière : {target_stream}")
-            else:
-                target_stream = st.selectbox("Choisir Filière (Admin)", ["LT", "GC", "IABD", "IS", "GE", "GM"])
+            
+            with st.container(border=True):
+                c1, c2, c3 = st.columns([1, 2, 1])
+                
+                if st.session_state['user_role'] == 'DELEGATE':
+                    target_stream = st.session_state['user_scope']
+                    c1.success(f"Filière : {target_stream}")
+                else:
+                    target_stream = c1.selectbox("Filière", ["LT", "GC", "IABD", "IS", "GE", "GM"])
 
-            c1, c2 = st.columns(2)
-            courses = get_courses(target_stream)
-            course_map = {c['name']: c['id'] for c in courses}
-            chosen_course = c1.selectbox("Matière", list(course_map.keys()) if courses else [])
-            chosen_date = c2.date_input("Date", datetime.now())
+                courses = get_courses(target_stream)
+                course_map = {c['name']: c['id'] for c in courses}
+                chosen_course = c2.selectbox("Matière", list(course_map.keys()) if courses else [])
+                chosen_date = c3.date_input("Date", datetime.now())
 
-            if st.button("Charger la liste"):
-                if chosen_course:
-                    st.session_state['attendance_context'] = {
-                        'students': get_students(target_stream),
-                        'course_id': course_map[chosen_course],
-                        'course_name': chosen_course
-                    }
+                if st.button("Charger la liste des étudiants ⬇️", type="primary"):
+                    if chosen_course:
+                        st.session_state['attendance_context'] = {
+                            'students': get_students(target_stream),
+                            'course_id': course_map[chosen_course],
+                            'course_name': chosen_course
+                        }
             
             if 'attendance_context' in st.session_state:
                 ctx = st.session_state['attendance_context']
-                st.divider()
-                st.subheader(f"Appel : {ctx['course_name']}")
+                st.info(f"Appel en cours : **{ctx['course_name']}**")
+                
                 with st.form("delegate_form"):
                     present_ids = []
+                    
+                    # Grille responsive pour les checkboxes
+                    st.write("Cochez les étudiants présents :")
                     cols = st.columns(3)
                     for i, s in enumerate(ctx['students']):
                         if cols[i%3].checkbox(f"{s['last_name']} {s['first_name']}", value=True, key=s['id']):
                             present_ids.append(s['id'])
-                    if st.form_submit_button("Valider et Envoyer"):
+                    
+                    st.divider()
+                    submit = st.form_submit_button("Valider et Enregistrer", type="primary", use_container_width=True)
+                    
+                    if submit:
                         if save_attendance(ctx['course_id'], chosen_date, present_ids, ctx['students']):
                             st.balloons()
-                            st.success("Enregistré !")
+                            st.toast("Feuille de présence enregistrée avec succès !", icon="🎉")
                             del st.session_state['attendance_context']
                             time.sleep(2)
                             st.rerun()
 
         # --- LOGIQUE ADMIN CORRECTION ---
         elif selected_staff == "Correction d'Erreurs":
-            st.title("🛠️ Correction Admin")
-            col_f, col_s = st.columns(2)
-            stream_fix = col_f.selectbox("Filière", ["LT", "GC", "IABD", "IS", "GE", "GM"])
-            sessions_data = get_past_sessions(stream_fix)
+            st.title("🛠️ Gestion des Erreurs")
+            st.markdown("Modifiez le statut de présence d'une session passée.")
             
-            if sessions_data:
-                sess_options = {f"{s['date_time'][:10]} | {s['courses']['name']}": s['id'] for s in sessions_data}
-                chosen_lbl = col_s.selectbox("Séance", list(sess_options.keys()))
-                chosen_id = sess_options[chosen_lbl]
+            with st.container(border=True):
+                col_f, col_s = st.columns(2)
+                stream_fix = col_f.selectbox("Choisir la Filière", ["LT", "GC", "IABD", "IS", "GE", "GM"])
+                sessions_data = get_past_sessions(stream_fix)
                 
-                if st.button("Charger données"):
-                    all_studs = get_students(stream_fix)
-                    recs = supabase.table('attendance').select("*").eq('session_id', chosen_id).execute().data
-                    pres_set = {r['student_id'] for r in recs if r['status'] == 'PRESENT'}
-                    data_edit = [{"ID": s['id'], "Nom": f"{s['last_name']} {s['first_name']}", "Présent": (s['id'] in pres_set)} for s in all_studs]
-                    st.session_state['edit_data'] = pd.DataFrame(data_edit)
-                    st.session_state['edit_sess_id'] = chosen_id
-                    st.session_state['edit_ref_studs'] = all_studs
+                if sessions_data:
+                    sess_options = {f"{s['date_time'][:10]} | {s['courses']['name']}": s['id'] for s in sessions_data}
+                    chosen_lbl = col_s.selectbox("Sélectionner la Séance", list(sess_options.keys()))
+                    chosen_id = sess_options[chosen_lbl]
+                    
+                    if st.button("Charger les données de la séance", type="secondary"):
+                        all_studs = get_students(stream_fix)
+                        recs = supabase.table('attendance').select("*").eq('session_id', chosen_id).execute().data
+                        pres_set = {r['student_id'] for r in recs if r['status'] == 'PRESENT'}
+                        data_edit = [{"ID": s['id'], "Nom": f"{s['last_name']} {s['first_name']}", "Présent": (s['id'] in pres_set)} for s in all_studs]
+                        st.session_state['edit_data'] = pd.DataFrame(data_edit)
+                        st.session_state['edit_sess_id'] = chosen_id
+                        st.session_state['edit_ref_studs'] = all_studs
 
             if 'edit_data' in st.session_state:
-                st.divider()
+                st.subheader("Modification")
                 edited_df = st.data_editor(
                     st.session_state['edit_data'],
                     column_config={"Présent": st.column_config.CheckboxColumn(default=False)},
                     disabled=["ID", "Nom"],
                     hide_index=True,
-                    use_container_width=True
+                    use_container_width=True,
+                    height=400
                 )
-                if st.button("Sauvegarder Corrections"):
+                
+                col_btn1, col_btn2 = st.columns([1, 4])
+                if col_btn2.button("Sauvegarder les Corrections", type="primary"):
                     upd_map = dict(zip(edited_df['ID'], edited_df['Présent']))
                     if update_attendance_correction(st.session_state['edit_sess_id'], upd_map, st.session_state['edit_ref_studs']):
-                        st.success("Mis à jour !")
+                        st.toast("Mise à jour effectuée !", icon="💾")
                         time.sleep(1)
                         st.rerun()
 
         # --- LOGIQUE PROF/STATS ---
-        elif selected_staff == "Tableau de Bord Prof" or selected_staff == "Stats Globales":
-            st.title("📊 Statistiques")
+        elif selected_staff in ["Tableau de Bord Prof", "Stats Globales"]:
+            st.title("📊 Vue d'ensemble")
             df = pd.DataFrame(get_global_stats())
+            
             if not df.empty:
-                filieres = st.multiselect("Filtrer", df['stream'].unique(), default=df['stream'].unique())
-                dff = df[df['stream'].isin(filieres)]
-                c1, c2 = st.columns(2)
-                c1.metric("Moyenne Présence", f"{dff['attendance_percentage'].mean():.1f}%")
-                c2.metric("Sessions", dff['total_sessions'].max())
+                with st.expander("🔎 Filtres", expanded=True):
+                    filieres = st.multiselect("Filtrer par Filière", df['stream'].unique(), default=df['stream'].unique())
                 
-                chart = alt.Chart(dff).mark_bar().encode(
-                    x=alt.X("attendance_percentage", bin=True),
-                    y='count()',
-                    color='stream'
-                )
+                dff = df[df['stream'].isin(filieres)]
+                
+                # KPIs Globaux
+                st.markdown("### Indicateurs Clés")
+                k1, k2, k3 = st.columns(3)
+                k1.metric("Moyenne Présence", f"{dff['attendance_percentage'].mean():.1f}%", delta="Global")
+                k2.metric("Sessions Totales", dff['total_sessions'].max())
+                k3.metric("Étudiants Suivis", len(dff))
+                
+                # Chart Distribution
+                st.markdown("### Distribution des taux de présence")
+                chart = alt.Chart(dff).mark_bar(cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
+                    x=alt.X("attendance_percentage", bin=alt.Bin(maxbins=20), title="Taux de Présence (%)"),
+                    y=alt.Y('count()', title="Nombre d'étudiants"),
+                    color=alt.Color('stream', legend=alt.Legend(title="Filière")),
+                    tooltip=['stream', 'count()']
+                ).properties(height=350)
+                
                 st.altair_chart(chart, use_container_width=True)
 
         elif selected_staff == "Alertes Absences":
-            st.title("🚨 Zone Rouge (< 50%)")
+            st.title("🚨 Zone d'Alerte")
+            st.caption("Étudiants ayant un taux de présence inférieur à 50%")
+            
             df = pd.DataFrame(get_global_stats())
             if not df.empty:
                 red = df[df['attendance_percentage'] < 50]
                 if not red.empty:
-                    st.dataframe(red[['last_name', 'first_name', 'stream', 'attendance_percentage']], use_container_width=True, hide_index=True)
+                    st.dataframe(
+                        red[['last_name', 'first_name', 'stream', 'attendance_percentage', 'absent_count']], 
+                        use_container_width=True, 
+                        hide_index=True,
+                        column_config={
+                            "attendance_percentage": st.column_config.ProgressColumn("Taux", format="%d%%", min_value=0, max_value=100),
+                            "absent_count": "Nbre Absences"
+                        }
+                    )
                 else:
-                    st.success("Aucun étudiant en danger.")
+                    st.success("✅ Aucun étudiant en situation critique.")
 
         elif selected_staff == "Explorer les Données":
-            st.title("🔎 Explorateur")
+            st.title("🔎 Explorateur de Données")
             df = pd.DataFrame(get_global_stats())
             st.dataframe(df, use_container_width=True, hide_index=True)
