@@ -17,49 +17,90 @@ st.set_page_config(
 )
 
 # --- CSS AVANCÉ & MODERNE ---
+# --- CSS PREMIUM & DESIGN SYSTEM ---
 st.markdown("""
 <style>
-    /* Global Font & Colors */
-    :root {
-        --primary-color: #1E3A8A;
-        --secondary-color: #64748B;
-        --success-color: #22c55e;
-        --warning-color: #f59e0b;
-        --danger-color: #ef4444;
+    /* 1. TYPOGRAPHIE & COULEURS GLOBALES */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+        color: #1e293b; 
     }
     
-    /* Card Design Style "Glassmorphism" Light */
-    .metric-card {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        text-align: center;
-        transition: transform 0.2s;
-        margin-bottom: 16px;
-    }
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    /* 2. ARRIÈRE-PLAN MODERNE */
+    .stApp {
+        background-color: #f8fafc; /* Gris très pâle bleuté */
+        background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+        background-size: 20px 20px; /* Effet "Papier millimétré" subtil */
     }
 
-    /* Typography */
-    h1, h2, h3 { color: var(--primary-color) !important; font-family: 'Helvetica Neue', sans-serif; }
-    p { color: var(--secondary-color); }
-    
-    /* Custom Buttons */
-    .stButton>button {
-        border-radius: 8px;
-        font-weight: 600;
-        border: none;
-        transition: all 0.3s ease;
+    /* 3. HERO SECTION (BANNIÈRE) */
+    .hero-container {
+        background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+        padding: 4rem 2rem;
+        border-radius: 0 0 2rem 2rem;
+        color: white;
+        text-align: center;
+        box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);
+        margin: -6rem -4rem 2rem -4rem; /* Pour coller aux bords */
     }
-    
-    /* Metrics Styling */
-    div[data-testid="stMetricValue"] {
-        color: var(--primary-color);
-        font-weight: 700;
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        letter-spacing: -1px;
+    }
+    .hero-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        font-weight: 400;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* 4. CARTES & CONTENEURS */
+    .metric-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        border-color: #bfdbfe;
+    }
+
+    /* 5. CHAMPS DE SAISIE STYLISÉS */
+    .stTextInput input {
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        padding: 12px 20px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .stTextInput input:focus {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    /* 6. BOUTONS PRIMAIRES */
+    .stButton>button {
+        background: linear-gradient(to right, #1E3A8A, #2563EB);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+    }
+    .stButton>button:hover {
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        transform: scale(1.02);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -589,4 +630,5 @@ elif app_mode == "Espace Staff":
             df = pd.DataFrame(get_global_stats())
             # Affichage corrigé sans paramètre invalide
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
