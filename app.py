@@ -266,148 +266,145 @@ with st.sidebar:
 # =========================================================
 # MODE 1 : ESPACE ÉTUDIANT (PUBLIC & ACCUEIL)
 # =========================================================
+# =========================================================
+# MODE 1 : ESPACE ÉTUDIANT (DESIGN PREMIUM)
+# =========================================================
 if app_mode == "Espace Étudiant":
     
-    # --- HERO SECTION (Bannière d'accueil) ---
+    # --- 1. HERO BANNER (HTML Pur pour le design) ---
     st.markdown("""
-    <div style="text-align: center; padding: 3rem 0; background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(30,58,138,0.05) 100%); border-radius: 20px; margin-bottom: 30px;">
-        <h1 style="color: #1E3A8A; font-size: 3.5rem; margin-bottom: 10px;">🎓 Portail Étudiant EPL</h1>
-        <p style="font-size: 1.3rem; color: #64748B; max-width: 600px; margin: 0 auto;">
-            Accédez à votre dossier académique, surveillez votre assiduité et restez informé de votre situation en temps réel.
-        </p>
+    <div class="hero-container">
+        <div class="hero-title">🎓 Portail Étudiant</div>
+        <div class="hero-subtitle">
+            Bienvenue sur l'espace numérique de l'EPL. 
+            Consultez votre assiduité en temps réel et accédez à votre dossier académique.
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # --- BARRE DE RECHERCHE ---
-    c_spacer1, c_main, c_spacer2 = st.columns([1, 2, 1])
-    with c_main:
-        st.markdown("##### 🔍 Identification")
-        search = st.text_input("Rechercher", placeholder="Entrez votre Matricule (ex: LF-LT-001) ou Nom de famille", label_visibility="collapsed")
-        
-        col_btn1, col_btn2, col_btn3 = st.columns([1,2,1])
-        with col_btn2:
-            btn_check = st.button("Accéder à mon Profil", type="primary", use_container_width=True)
+    # --- 2. BARRE DE RECHERCHE CENTRÉE ---
+    # On utilise des colonnes vides pour centrer la barre au milieu de l'écran
+    col_left, col_center, col_right = st.columns([1, 2, 1])
     
-    st.markdown("---")
+    with col_center:
+        # On met le tout dans une carte blanche pour faire ressortir la recherche
+        st.markdown('<div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-top: -50px; position: relative; z-index: 10;">', unsafe_allow_html=True)
+        st.markdown("##### 🔎 Identifiez-vous")
+        search = st.text_input("Recherche", placeholder="Votre Matricule (ex: LF-LT-001) ou Nom", label_visibility="collapsed")
+        
+        # Bouton pleine largeur
+        st.markdown("<br>", unsafe_allow_html=True)
+        btn_check = st.button("Accéder à mon Espace", type="primary", use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- RÉSULTATS ---
+    # --- 3. RÉSULTATS DYNAMIQUES ---
     if search and btn_check:
-        with st.spinner("🔄 Recherche dans la base académique..."):
+        st.markdown("<br><br>", unsafe_allow_html=True) # Espacement
+        
+        with st.spinner("Connexion au serveur académique..."):
             results = get_student_details(search.strip())
-            time.sleep(0.8) # Petit délai pour l'effet UX
+            time.sleep(0.8) # Délai esthétique
             
             if results:
-                student = results[0] # On prend le premier résultat trouvé
+                student = results[0]
                 
-                st.success(f"Dossier trouvé : {student['first_name']} {student['last_name']}")
+                # --- EN-TÊTE DU DOSSIER ---
+                # Avatar basé sur le genre
+                avatar = "https://img.icons8.com/3d-fluency/375/student-male--v3.png" if "M" in str(student.get('gender', 'M')).upper() else "https://img.icons8.com/3d-fluency/375/student-female--v3.png"
                 
-                # --- BLOC 1 : PROFIL & STATS ---
-                c_profile, c_kpi = st.columns([1, 2], gap="large")
+                c_header1, c_header2 = st.columns([1, 4])
+                with c_header1:
+                    st.image(avatar, width=150)
+                with c_header2:
+                    st.markdown(f"""
+                    <h1 style="color:#1e293b; margin-bottom:0;">{student['first_name']} <span style="color:#2563EB;">{student['last_name']}</span></h1>
+                    <div style="display:flex; gap: 15px; margin-top: 10px;">
+                        <span style="background:#eff6ff; color:#2563EB; padding:5px 15px; border-radius:20px; font-weight:bold; border:1px solid #bfdbfe;">{student['stream']}</span>
+                        <span style="background:#f1f5f9; color:#64748B; padding:5px 15px; border-radius:20px; font-weight:bold; border:1px solid #e2e8f0;">Matricule: {student['student_id']}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                st.markdown("---")
+
+                # --- STATISTIQUES (CARTES DESIGN) ---
+                col1, col2, col3 = st.columns(3)
                 
-                with c_profile:
-                    # Avatar dynamique basé sur le genre (si dispo dans la base)
-                    # Par défaut on check 'gender' ou on met neutre
-                    gender = str(student.get('gender', 'M')).upper()
-                    if 'F' in gender:
-                        avatar_url = "https://img.icons8.com/color/480/student-female--v1.png"
-                    else:
-                        avatar_url = "https://img.icons8.com/color/480/student-male--v1.png"
+                # Carte 1 : Taux Global
+                with col1:
+                    pct = float(student['attendance_percentage'])
+                    color_status = "#22c55e" if pct >= 75 else "#f59e0b" if pct >= 50 else "#ef4444"
                     
                     st.markdown(f"""
                     <div class="metric-card">
-                        <img src="{avatar_url}" width="120" style="border-radius:50%; margin-bottom:15px; border: 3px solid #1E3A8A;">
-                        <h3 style="margin:0; color:#1E3A8A; font-size: 1.5rem;">{student['first_name']}</h3>
-                        <h2 style="margin:0; font-weight:800; font-size: 2rem; color:#0f172a;">{student['last_name']}</h2>
-                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                            <p style="color:#64748B; font-size:1rem; margin-bottom: 5px;">Matricule : <strong style="color:#1E3A8A;">{student['student_id']}</strong></p>
-                            <p style="color:#64748B; font-size:1rem;">Filière : <span style="background-color:#eff6ff; color:#1E3A8A; padding: 4px 12px; border-radius: 15px; font-weight:bold;">{student['stream']}</span></p>
+                        <p style="font-size:0.9rem; font-weight:600; color:#64748B; text-transform:uppercase;">Assiduité Globale</p>
+                        <h2 style="font-size:3rem; color:{color_status}; margin:10px 0;">{pct}%</h2>
+                        <div style="background:#f1f5f9; height:10px; border-radius:5px; overflow:hidden;">
+                            <div style="background:{color_status}; width:{pct}%; height:100%;"></div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
 
-                with c_kpi:
-                    st.markdown("#### 📈 Indicateurs de Performance")
-                    
-                    # Grands Indicateurs (Metrics)
-                    k1, k2, k3 = st.columns(3)
-                    k1.metric("Taux de Présence", f"{student['attendance_percentage']}%")
-                    k2.metric("Sessions Suivies", f"{student['present_count']} / {student['total_sessions']}")
-                    k3.metric("Absences", student['absent_count'], delta_color="inverse")
-                    
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    
-                    # Barre de progression visuelle HTML/CSS
-                    pct = float(student['attendance_percentage'])
-                    
-                    # Logique de couleur
-                    if pct >= 75:
-                        bar_color = "#22c55e" # Vert
-                        msg_class = "success"
-                        msg_text = "✅ **Excellent !** Votre assiduité est exemplaire."
-                    elif pct >= 50:
-                        bar_color = "#f59e0b" # Orange
-                        msg_class = "warning"
-                        msg_text = "⚠️ **Attention.** Votre taux est moyen. Restez vigilant."
-                    else:
-                        bar_color = "#ef4444" # Rouge
-                        msg_class = "error"
-                        msg_text = "🚨 **Critique.** Vous êtes en dessous du seuil autorisé. Contactez l'administration."
-
+                # Carte 2 : Compteurs
+                with col2:
                     st.markdown(f"""
-                    <p style="margin-bottom:8px; font-weight:600; color:#475569;">Jauge d'Assiduité :</p>
-                    <div style="background-color: #f1f5f9; border-radius: 10px; height: 24px; width: 100%; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);">
-                        <div style="background-color: {bar_color}; height: 100%; width: {pct}%; transition: width 1s ease-in-out;"></div>
+                    <div class="metric-card">
+                        <p style="font-size:0.9rem; font-weight:600; color:#64748B; text-transform:uppercase;">Sessions</p>
+                        <div style="display:flex; justify-content:space-around; align-items:center; margin-top:15px;">
+                            <div>
+                                <div style="font-size:2rem; font-weight:800; color:#1e293b;">{student['present_count']}</div>
+                                <div style="font-size:0.8rem; color:#22c55e;">Présences</div>
+                            </div>
+                            <div style="width:1px; height:40px; background:#e2e8f0;"></div>
+                            <div>
+                                <div style="font-size:2rem; font-weight:800; color:#1e293b;">{student['total_sessions']}</div>
+                                <div style="font-size:0.8rem; color:#64748B;">Total</div>
+                            </div>
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
-                    
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    
-                    if msg_class == "success": st.success(msg_text)
-                    elif msg_class == "warning": st.warning(msg_text)
-                    else: st.error(msg_text)
 
-                # --- BLOC 2 : GRAPHIQUE & INFO ---
-                st.markdown("### 📊 Analyse Graphique")
-                g1, g2 = st.columns([1, 1])
+                # Carte 3 : Absences
+                with col3:
+                    st.markdown(f"""
+                    <div class="metric-card">
+                        <p style="font-size:0.9rem; font-weight:600; color:#64748B; text-transform:uppercase;">Absences</p>
+                        <h2 style="font-size:3rem; color:#ef4444; margin:10px 0;">{student['absent_count']}</h2>
+                        <p style="font-size:0.8rem; color:#ef4444;">Justifiées ou non</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                # --- GRAPHIQUE & INFO ---
+                st.markdown("<br>", unsafe_allow_html=True)
+                c_graph, c_info = st.columns([1, 1])
                 
-                with g1:
-                    # Donut Chart via Altair
+                with c_graph:
+                    st.markdown("#### 📊 Répartition visuelle")
                     source = pd.DataFrame({
-                        "Statut": ["Présent", "Absent"],
+                        "Type": ["Présence", "Absence"],
                         "Valeur": [student['present_count'], student['absent_count']]
                     })
                     
+                    # Graphique Donut épuré
                     base = alt.Chart(source).encode(theta=alt.Theta("Valeur", stack=True))
-                    pie = base.mark_arc(outerRadius=100, innerRadius=60).encode(
-                        color=alt.Color("Statut", scale=alt.Scale(domain=["Présent", "Absent"], range=["#22c55e", "#ef4444"])),
-                        tooltip=["Statut", "Valeur"],
-                        order=alt.Order("Statut", sort="descending")
+                    pie = base.mark_arc(innerRadius=60, outerRadius=100).encode(
+                        color=alt.Color("Type", scale=alt.Scale(domain=["Présence", "Absence"], range=["#22c55e", "#ef4444"])),
+                        tooltip=["Type", "Valeur"],
+                        order=alt.Order("Type", sort="descending")
                     )
-                    text = base.mark_text(radius=120).encode(
-                        text="Valeur",
-                        order=alt.Order("Statut", sort="descending"),
-                        color=alt.value("black")  
-                    )
-                    st.altair_chart(pie + text, use_container_width=True)
-                    
-                with g2:
+                    st.altair_chart(pie, use_container_width=True)
+                
+                with c_info:
+                    st.markdown("#### 💡 Note d'information")
                     st.info("""
-                    💡 **Le saviez-vous ?**
+                    **Important :** Les statistiques affichées sont mises à jour en temps réel par les délégués de filière.
                     
-                    L'assiduité est le premier facteur de réussite à l'EPL.
-                    * **> 75%** : Zone de réussite optimale.
-                    * **< 50%** : Risque élevé d'échec ou d'exclusion aux examens.
-                    
-                    Si vous constatez une erreur dans vos relevés, veuillez vous rapprocher de votre délégué de filière sous 48h.
+                    * Un taux **inférieur à 50%** entraîne une convocation automatique.
+                    * Pour justifier une absence, veuillez déposer vos justificatifs au secrétariat académique sous 48h.
                     """)
-                    
+
             else:
-                st.error("❌ Étudiant introuvable.")
-                st.markdown("""
-                * Vérifiez l'orthographe de votre nom.
-                * Vérifiez le format de votre matricule (ex: LF-GC-003).
-                * Si le problème persiste, contactez l'administration.
-                """)
+                st.error("❌ Dossier introuvable.")
+                st.caption("Vérifiez la saisie ou contactez l'administration.")
 
 # =========================================================
 # MODE 2 : ESPACE STAFF (PRIVÉ & SÉCURISÉ)
@@ -630,5 +627,6 @@ elif app_mode == "Espace Staff":
             df = pd.DataFrame(get_global_stats())
             # Affichage corrigé sans paramètre invalide
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
 
