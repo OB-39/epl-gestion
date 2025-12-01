@@ -90,7 +90,8 @@ def get_student_stats(search_term):
 
 # Menu latéral moderne
 with st.sidebar:
-    st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=150) # Icone Placeholder
+    # Logo EPL (ou placeholder)
+    st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=150) 
     st.markdown("### EPL - Gestion")
     
     selected = option_menu(
@@ -173,37 +174,17 @@ if selected == "Espace Étudiant":
                 st.warning("⚠️ Aucun étudiant trouvé. Vérifiez l'orthographe.")
 
 # === PAGE PROFESSEUR ===
-#################
-# --- EXPORT DES DONNÉES (Pour l'Admin) ---
-with st.sidebar:
-    st.divider()
-    st.markdown("### 📥 Rapports")
-    if st.button("Télécharger les présences (CSV)"):
-        # On récupère TOUTES les présences avec les noms des étudiants
-        # Note: Ceci est une requête SQL un peu plus avancée
-        query = """
-        select 
-            sessions.date_time,
-            courses.name as matiere,
-            students.last_name,
-            students.first_name,
-            attendance.status
-        from attendance
-        join sessions on attendance.session_id = sessions.id
-        join students on attendance.student_id = students.id
-        join courses on sessions.course_id = courses.id
-        """
-        # On exécute
-        res = supabase.postgrest.rpc('get_attendance_report').execute() # Si vous utilisez une fonction RPC
-        # OU plus simple pour l'instant, on télécharge juste la vue brute si on veut faire vite
-        # Pour faire simple sans créer de fonction SQL complexe maintenant :
-        
-        st.info("Fonctionnalité d'export avancée à venir. Vous pouvez consulter la vue 'student_stats' sur Supabase.")
-        #################################
 elif selected == "Espace Professeur":
     st.title("📋 Module d'Appel")
     st.markdown("---")
     
+    # --- EXPORT DES DONNÉES (Placé ici pour éviter l'erreur d'indentation) ---
+    with st.sidebar:
+        st.divider()
+        st.markdown("### 📥 Rapports")
+        if st.button("Télécharger les présences (CSV)"):
+            st.info("Fonctionnalité d'export avancée à venir. Vous pouvez consulter la vue 'student_stats' sur Supabase.")
+
     # Zone de Login propre
     if "admin_logged" not in st.session_state:
         st.session_state["admin_logged"] = False
@@ -273,5 +254,4 @@ elif selected == "Espace Professeur":
                         st.success(f"✅ Appel enregistré avec succès ! ({len(present)}/{len(students)} présents)")
                         time.sleep(2)
                         del st.session_state['students_list']
-
                         st.rerun()
