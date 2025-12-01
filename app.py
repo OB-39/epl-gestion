@@ -20,121 +20,102 @@ st.set_page_config(
 # --- CSS PREMIUM & DESIGN SYSTEM ---
 st.markdown("""
 <style>
-    /* IMPORTS & VARIABLES */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap');
     
     :root {
-        --primary: #0f172a; /* Bleu Nuit très sombre (Presque noir) */
-        --accent: #2563eb;  /* Bleu Royal (Boutons/Liens) */
-        --bg-light: #f8fafc; /* Gris très pâle */
-        --text-dark: #1e293b; /* Texte principal */
-        --text-light: #64748b; /* Texte secondaire */
-        --card-bg: #ffffff;
+        --bg-color: #cbd5e1;       /* Gris soutenu (Fond général) */
+        --card-color: #e2e8f0;     /* Gris clair (Cartes) - PAS BLANC */
+        --text-color: #020617;     /* Noir quasi pur */
+        --primary: #0f172a;        /* Bleu nuit très sombre */
+        --accent: #2563eb;         /* Bleu roi pour l'intéraction */
+        --border-color: #94a3b8;   /* Bordures visibles */
     }
 
-    html, body, [class*="css"] {
+    /* 1. FOND GÉNÉRAL (Pas de blanc) */
+    .stApp {
+        background-color: var(--bg-color);
+    }
+
+    /* 2. TEXTE EN GRAS PAR DÉFAUT */
+    html, body, p, div, span, label, li {
         font-family: 'Inter', sans-serif;
-        color: var(--text-dark);
-        background-color: var(--bg-light);
-    }
-
-    /* 1. HERO SECTION (Bannière) RESPONSIVE */
-    .hero-container {
-        background-color: var(--card-bg);
-        border-bottom: 1px solid #e2e8f0;
-        padding: 3rem 1rem;
-        margin: -6rem -4rem 2rem -4rem; /* S'étend sur les bords */
-        text-align: center;
-    }
-    /* Sur mobile, on réduit les marges négatives */
-    @media (max-width: 768px) {
-        .hero-container {
-            margin: -2rem -1rem 1rem -1rem;
-            padding: 2rem 1rem;
-        }
-        h1 { font-size: 1.8rem !important; }
-    }
-
-    .hero-title {
-        color: var(--primary);
-        font-size: 2.5rem;
-        font-weight: 800;
-        letter-spacing: -0.05rem;
-        margin-bottom: 0.5rem;
-    }
-    .hero-subtitle {
-        color: var(--text-light);
-        font-size: 1.1rem;
-        max-width: 600px;
-        margin: 0 auto;
-        line-height: 1.6;
-    }
-
-    /* 2. CARTES MODERNES (Box Shadow subtil) */
-    .metric-card {
-        background: var(--card-bg);
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 24px;
-        text-align: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-    .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        border-color: var(--accent);
-    }
-
-    /* 3. INPUTS & BOUTONS */
-    .stTextInput input {
-        background-color: white;
-        color: var(--text-dark);
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        padding: 10px 15px;
-    }
-    .stTextInput input:focus {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        color: var(--text-color) !important;
+        font-weight: 600 !important; /* Tout en gras moyen */
+        font-size: 1.05rem; /* Légèrement plus gros */
     }
     
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--primary) !important;
+        font-weight: 900 !important; /* Titres très gras */
+        letter-spacing: -0.5px;
+    }
+
+    /* 3. CARTES HAUTE VISIBILITÉ */
+    .metric-card {
+        background-color: var(--card-color);
+        border: 2px solid var(--border-color); /* Bordure épaisse */
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 4px 4px 0px rgba(0,0,0,0.1); /* Ombre dure pour le contraste */
+    }
+
+    /* 4. BANNIÈRE (Hero) */
+    .hero-container {
+        background-color: var(--primary); /* Fond sombre */
+        color: #f8fafc !important;       /* Texte clair sur fond sombre */
+        padding: 3rem 1rem;
+        border-radius: 0 0 20px 20px;
+        margin: -6rem -4rem 2rem -4rem;
+        text-align: center;
+        border-bottom: 4px solid var(--accent);
+    }
+    .hero-title {
+        color: #ffffff !important;
+        font-size: 2.8rem;
+        text-transform: uppercase;
+    }
+    .hero-subtitle {
+        color: #cbd5e1 !important;
+        font-weight: 500 !important;
+    }
+    
+    /* 5. INPUTS & BOUTONS ROBUSTES */
+    .stTextInput input {
+        background-color: #f1f5f9; /* Gris très clair */
+        border: 2px solid var(--primary);
+        color: black !important;
+        font-weight: 700;
+        border-radius: 8px;
+    }
     .stButton>button {
         background-color: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0.6rem 1.2rem;
-        font-weight: 600;
-        width: 100%;
-        transition: background-color 0.2s;
+        color: white !important;
+        border: 2px solid var(--primary);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 12px 24px;
     }
     .stButton>button:hover {
         background-color: var(--accent);
-        color: white;
+        border-color: var(--accent);
     }
 
-    /* 4. VISIBILITÉ TEXTE & TITRES */
-    h1, h2, h3 {
-        color: var(--primary) !important;
-    }
-    p, label, span {
-        color: var(--text-dark);
-    }
-    /* Les petites métriques (delta) */
+    /* 6. METRICS STREAMLIT (Correction couleurs) */
     div[data-testid="stMetricValue"] {
-        color: var(--primary);
+        color: black !important;
+        font-weight: 900 !important;
+        font-size: 2rem !important;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #475569 !important;
+        font-weight: 700 !important;
+        text-transform: uppercase;
     }
     
-    /* 5. TAGS FILIÈRE (Style Badge) */
-    .stream-badge {
-        background-color: #f1f5f9;
-        color: var(--primary);
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        border: 1px solid #e2e8f0;
+    /* Responsive Mobile */
+    @media (max-width: 768px) {
+        .hero-container { margin: -2rem -1rem 1rem -1rem; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -660,6 +641,7 @@ elif app_mode == "Espace Staff":
             df = pd.DataFrame(get_global_stats())
             # Affichage corrigé sans paramètre invalide
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
 
 
