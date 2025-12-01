@@ -79,27 +79,7 @@ st.markdown("""
         font-weight: 500 !important;
     }
     
-    /* 5. INPUTS & BOUTONS ROBUSTES */
-    .stTextInput input {
-        background-color: #f1f5f9; /* Gris très clair */
-        border: 2px solid var(--primary);
-        color: black !important;
-        font-weight: 700;
-        border-radius: 8px;
-    }
-    .stButton>button {
-        background-color: var(--primary);
-        color: white !important;
-        border: 2px solid var(--primary);
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        padding: 12px 24px;
-    }
-    .stButton>button:hover {
-        background-color: var(--accent);
-        border-color: var(--accent);
-    }
+  
 
     /* 6. METRICS STREAMLIT (Correction couleurs) */
     div[data-testid="stMetricValue"] {
@@ -641,6 +621,7 @@ elif app_mode == "Espace Staff":
             df = pd.DataFrame(get_global_stats())
             # Affichage corrigé sans paramètre invalide
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
 
 
