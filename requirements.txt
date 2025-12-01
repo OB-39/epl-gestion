@@ -1,6 +1,5 @@
 streamlit
 supabase
-
 pandas
 streamlit-option-menu
 altair
