@@ -187,72 +187,139 @@ with st.sidebar:
 # =========================================================
 # MODE 1 : ESPACE ÉTUDIANT (PUBLIC)
 # =========================================================
+# =========================================================
+# MODE 1 : ESPACE ÉTUDIANT (PUBLIC) - VERSION MODERNISÉE
+# =========================================================
 if app_mode == "Espace Étudiant":
-    st.markdown("# 🎓 Portail Étudiant")
-    st.markdown("Suivez votre assiduité en temps réel. Entrez vos identifiants ci-dessous.")
+    st.markdown("# 🎓 Mon Espace")
+    st.markdown("Consultez votre profil et vos statistiques de présence en temps réel.")
     
+    # Barre de recherche flottante
     with st.container(border=True):
-        col_s1, col_s2 = st.columns([3, 1])
+        col_s1, col_s2 = st.columns([4, 1])
         with col_s1:
-            search = st.text_input("Recherche", placeholder="Matricule (ex: LF-LT-001) ou Nom de famille", label_visibility="collapsed")
+            search = st.text_input("Recherche", placeholder="Entrez votre Matricule (ex: LF-LT-001) ou Nom", label_visibility="collapsed")
         with col_s2:
-            st.write("") # Spacer
-            
+            st.write("") # Spacer alignement
+
     if search:
-        with st.spinner("Recherche dans la base de données..."):
+        with st.spinner("Chargement du profil..."):
             results = get_student_details(search.strip())
             time.sleep(0.3)
             
             if results:
                 for student in results:
-                    st.success(f"Dossier trouvé : {student['first_name']} {student['last_name']}")
+                    # Calcul des initiales pour l'avatar
+                    initials = f"{student['first_name'][0]}{student['last_name'][0]}".upper()
                     
-                    # Layout Carte d'identité visuelle
-                    with st.container():
-                        # Header de la fiche
-                        st.markdown(f"""
-                        <div class="css-card" style="border-left: 5px solid #1E3A8A;">
-                            <h2 style="margin:0;">{student['first_name']} {student['last_name']}</h2>
-                            <p style="color:#64748B; margin:0;">{student['student_id']} • <b>{student['stream']}</b></p>
+                    # --- 1. CARTE D'IDENTITÉ AVEC AVATAR ---
+                    st.markdown(f"""
+                    <style>
+                        .profile-card {{
+                            background-color: white;
+                            border-radius: 16px;
+                            padding: 24px;
+                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+                            border: 1px solid #f1f5f9;
+                            margin-bottom: 20px;
+                            display: flex;
+                            align-items: center;
+                            gap: 24px;
+                        }}
+                        .avatar {{
+                            width: 80px;
+                            height: 80px;
+                            background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-size: 28px;
+                            font-weight: 700;
+                            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+                        }}
+                        .info-badge {{
+                            background-color: #f1f5f9;
+                            color: #475569;
+                            padding: 4px 12px;
+                            border-radius: 9999px;
+                            font-size: 0.85rem;
+                            font-weight: 600;
+                            display: inline-block;
+                            margin-right: 8px;
+                        }}
+                        .stream-badge {{
+                            background-color: #eff6ff;
+                            color: #1d4ed8;
+                        }}
+                    </style>
+                    
+                    <div class="profile-card">
+                        <div class="avatar">{initials}</div>
+                        <div>
+                            <h2 style="margin: 0; color: #1e293b; font-size: 1.8rem; font-family: 'Segoe UI', sans-serif;">
+                                {student['first_name']} <span style="font-weight: 800;">{student['last_name']}</span>
+                            </h2>
+                            <div style="margin-top: 10px;">
+                                <span class="info-badge stream-badge">Filière {student['stream']}</span>
+                                <span class="info-badge">🆔 {student['student_id']}</span>
+                            </div>
                         </div>
-                        """, unsafe_allow_html=True)
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                        # KPIs
-                        c1, c2, c3 = st.columns(3)
-                        with c1:
-                            st.markdown(f"""
-                            <div class="css-card" style="text-align:center;">
-                                <div class="stat-label">Taux de Présence</div>
-                                <div class="stat-value">{student['attendance_percentage']}%</div>
+                    # --- 2. STATISTIQUES EN COLONNES ---
+                    c1, c2, c3 = st.columns([1, 1, 1.2])
+
+                    # Taux de présence
+                    with c1:
+                        st.markdown("""
+                        <div style="background:white; padding:20px; border-radius:12px; border:1px solid #e2e8f0; text-align:center; height:100%;">
+                            <div style="color:#64748B; font-size:0.9rem; font-weight:600; text-transform:uppercase; margin-bottom:5px;">Assiduité</div>
+                            <div style="font-size:2.5rem; font-weight:800; color:#1E3A8A;">
+                                {0}%
                             </div>
-                            """, unsafe_allow_html=True)
-                            st.progress(float(student['attendance_percentage']) / 100)
+                        </div>
+                        """.format(student['attendance_percentage']), unsafe_allow_html=True)
                         
-                        with c2:
-                            st.markdown(f"""
-                            <div class="css-card" style="text-align:center;">
-                                <div class="stat-label">Absences</div>
-                                <div class="stat-value" style="color: #EF4444;">{student['absent_count']}</div>
-                                <div style="font-size:0.8rem; color:gray;">sur {student['total_sessions']} séances</div>
-                            </div>
-                            """, unsafe_allow_html=True)
+                        # Barre de progression native Streamlit en dessous
+                        st.write("")
+                        val_float = float(student['attendance_percentage']) / 100
+                        st.progress(val_float)
 
-                        with c3:
-                            # Chart Modernisé
+                    # Compteur Absences
+                    with c2:
+                        st.markdown("""
+                        <div style="background:white; padding:20px; border-radius:12px; border:1px solid #e2e8f0; text-align:center; height:100%;">
+                            <div style="color:#64748B; font-size:0.9rem; font-weight:600; text-transform:uppercase; margin-bottom:5px;">Absences</div>
+                            <div style="font-size:2.5rem; font-weight:800; color:#ef4444;">
+                                {0}
+                            </div>
+                            <div style="font-size:0.8rem; color:#94a3b8;">sur {1} cours total</div>
+                        </div>
+                        """.format(student['absent_count'], student['total_sessions']), unsafe_allow_html=True)
+
+                    # Graphique Donut (Couleurs Modernes)
+                    with c3:
+                        with st.container(border=True):
                             source = pd.DataFrame({
                                 "État": ["Présent", "Absent"],
                                 "Valeur": [student['present_count'], student['absent_count']]
                             })
                             
+                            # Palette moderne : Emerald (Succès) & Rose (Danger)
                             base = alt.Chart(source).encode(theta=alt.Theta("Valeur", stack=True))
-                            pie = base.mark_arc(outerRadius=55, innerRadius=35).encode(
-                                color=alt.Color("État", scale=alt.Scale(domain=["Présent", "Absent"], range=["#22c55e", "#ef4444"]), legend=None),
+                            pie = base.mark_arc(innerRadius=40, outerRadius=70).encode(
+                                color=alt.Color("État", 
+                                    scale=alt.Scale(domain=["Présent", "Absent"], range=["#10b981", "#f43f5e"]),
+                                    legend=alt.Legend(orient="bottom", title=None)
+                                ),
                                 tooltip=["État", "Valeur"]
                             )
                             st.altair_chart(pie, use_container_width=True)
-
             else:
-                st.warning("Aucun dossier trouvé pour cette recherche.")
+                st.warning("🔍 Aucun étudiant trouvé avec ces informations. Vérifiez le matricule.")
 
 # =========================================================
 # MODE 2 : ESPACE STAFF (PRIVÉ & SÉCURISÉ)
@@ -451,3 +518,4 @@ elif app_mode == "Espace Staff":
             st.title("🔎 Explorateur de Données")
             df = pd.DataFrame(get_global_stats())
             st.dataframe(df, use_container_width=True, hide_index=True)
+
