@@ -561,7 +561,6 @@ def login(password):
 
 @st.cache_data(ttl=30)
 def get_all_user_credentials():
-    """Charge TOUS les identifiants (Staff et Délégués) depuis la table Supabase."""
     try:
         # Récupère l'ID (scope), le rôle et le mot de passe
         result = supabase.table('delegate_access').select("id, role, password").execute()
@@ -773,7 +772,7 @@ if not st.session_state['user_role']:
             <div class='main-header animate-fade-in'>
                 <h1 style='margin: 0;'>Suivi Académique en Temps Réel</h1>
                 <p style='color: rgba(255,255,255,0.9); font-size: clamp(0.95rem, 2.2vw, 1.1rem); margin-top: 0.5rem;'>
-                    Université de Lomé • École Polytechnique
+                    Université de Lomé • EPL
                 </p>
                 <div style='margin-top: 1rem;'>
                     <span class='licence-badge animate-pulse'>Programme Licence</span>
@@ -796,7 +795,7 @@ if not st.session_state['user_role']:
             with search_col1:
                 search_query = st.text_input(
                     " ",
-                    placeholder="Ex: 12345 ou 'Koffi' ou 'Ama'...",
+                    placeholder="Ex: LF-LT-... ou 'Koffi' ou 'Ama'...",
                     label_visibility="collapsed",
                     key="main_search"
                 )
@@ -962,22 +961,27 @@ if not st.session_state['user_role']:
         st.markdown("---")
         st.markdown("### 💡 Fonctionnalités du Portail")
         
-        cols_info = st.columns(3)
-        features = [
-            ("📱", "Accès Mobile", "Consultez vos stats depuis votre smartphone", "#3B82F6"),
-            ("📈", "Statistiques Détaillées", "Visualisez vos progrès par matière", "#10B981"),
-            ("🔒", "Données Sécurisées", "Vos informations sont protégées", "#8B5CF6")
-        ]
-        
-        for idx, (icon, title, desc, color) in enumerate(features):
-            with cols_info[idx]:
-                st.markdown(f"""
-                <div class='home-card animate-fade-in'>
-                    <div style='color: {color}; font-size: 2rem; margin-bottom: 1rem;'>{icon}</div>
-                    <h4 style='color: {color};'>{title}</h4>
-                    <p>{desc}</p>
-                </div>
-                """, unsafe_allow_html=True)
+cols_info = st.columns(3)
+features = [
+    # Nouvelle fonctionnalité 1 : Temps Réel
+    ("🚀", "Performance en Direct", "Taux de présence mis à jour après chaque appel enregistré par le staff.", "#3B82F6"),
+    
+    # Nouvelle fonctionnalité 2 : Alerte Proactive
+    ("📈", "Statistiques Détaillées", "Visualisez vos progrès par matière", "#10B981"),
+    
+    # Nouvelle fonctionnalité 3 : Transparence
+    ("🔄", "Traçabilité Complète", "Visualisez l'historique précis de toutes vos sessions et sessions corrigées.", "#10B981")
+]
+
+for idx, (icon, title, desc, color) in enumerate(features):
+    with cols_info[idx]:
+        st.markdown(f"""
+        <div class='home-card animate-fade-in'>
+            <div style='color: {color}; font-size: 2rem; margin-bottom: 1rem;'>{icon}</div>
+            <h4 style='color: {color};'>{title}</h4>
+            <p>{desc}</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # FOOTER
         st.markdown("---")
@@ -989,8 +993,8 @@ if not st.session_state['user_role']:
                     <img src="{LOGO_URL}" alt="Logo EPL">
                 </div>
                 <p style='color: #94a3b8; font-size: 0.85rem; margin: 0; line-height: 1.5;'>
-                    © 2024 École Polytechnique de Lomé<br>
-                    <span style='font-size: 0.8rem; color: #64748b;'>Portail Académique v2.0 • Responsive Design</span>
+                    © 2025 École Polytechnique de Lomé<br>
+                    <span style='font-size: 0.8rem; color: #64748b;'>Portail Académique v2.0 • created by OB</span>
                 </p>
             </div>
             """, unsafe_allow_html=True)
@@ -1018,15 +1022,6 @@ if not st.session_state['user_role']:
             
             # Carte de connexion
             with st.container():
-                st.markdown("""
-                <div style='
-                    background: linear-gradient(145deg, #1e293b, #0f172a);
-                    padding: clamp(1.2rem, 2.5vw, 2rem);
-                    border-radius: 20px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                    border: 1px solid #475569;
-                '>
-                """, unsafe_allow_html=True)
                 
                 pwd = st.text_input("Mot de passe", type="password", key="login_password", 
                                    placeholder="Entrez le mot de passe d'accès")
@@ -1773,6 +1768,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
