@@ -786,7 +786,7 @@ function triggerAdminLogin() {
 """, unsafe_allow_html=True)
 
 # Bouton Streamlit caché pour déclencher l'action
-            if st.button(" ", key="adminAccessTrigger", help="hidden", type="primary"):
+        if st.button(" ", key="adminAccessTrigger", help="hidden", type="primary"):
             st.session_state['show_login'] = True
             st.rerun()
         # Conteneur principal
@@ -1380,4 +1380,5 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
 
         elif selected == "Explorer les Données":
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
