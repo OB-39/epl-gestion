@@ -786,8 +786,7 @@ function triggerAdminLogin() {
 """, unsafe_allow_html=True)
 
 
-        # Conteneur principal
-        st.markdown('<div class="main-container">', unsafe_allow_html=True)
+      
         
         # En-tête principal avec logo adaptatif
         col1, col2 = st.columns([1, 2])
@@ -1377,6 +1376,7 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
 
         elif selected == "Explorer les Données":
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
 
 
