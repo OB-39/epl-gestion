@@ -1783,46 +1783,46 @@ elif selected == "🛡️ Super Admin":
     # 1.4. NOUVEL Onglet Journal d'Activité des Délégués
     # =========================================================
         with tab_activite:
-        st.header("⏳ Journal d'Activité des Sessions")
-        st.info("Affiche les 100 dernières sessions enregistrées, avec l'heure de la séance comme indicateur d'heure de remplissage.")
+            st.header("⏳ Journal d'Activité des Sessions")
+            st.info("Affiche les 100 dernières sessions enregistrées, avec l'heure de la séance comme indicateur d'heure de remplissage.")
         
-        df_activity = get_delegate_activity_log()
+            df_activity = get_delegate_activity_log()
         
-        if df_activity.empty:
-            st.warning("Aucune donnée de session trouvée pour le moment.")
-        else:
-            
-            # FILTRES
-            col_f1, col_f2 = st.columns([1, 2])
-            filieres = df_activity['Filière_Scope'].unique()
-            selected_stream = col_f1.selectbox("Filtrer par Filière (Délégué)", ['TOUTES'] + list(filieres))
-            
-            if selected_stream != 'TOUTES':
-                df_filtered_activity = df_activity[df_activity['Filière_Scope'] == selected_stream]
+            if df_activity.empty:
+                st.warning("Aucune donnée de session trouvée pour le moment.")
             else:
-                df_filtered_activity = df_activity
-
-            col_f2.metric(
-                "Total de sessions affichées", 
-                len(df_filtered_activity), 
-                f"Dernière mise à jour : {datetime.now().strftime('%H:%M:%S')}"
-            )
             
-            st.dataframe(
-                df_filtered_activity,
-                column_order=[
-                    "Date_Session", 
-                    "Heure_Remplissage_Estimée", 
-                    "Filière_Scope", 
-                    "Matière", 
-                    "Statut_Remplissage"
-                ],
-                column_config={
-                    "Heure_Remplissage_Estimée": st.column_config.TimeColumn("Heure (Proxy)")
-                },
-                hide_index=True,
-                use_container_width=True
-            )
+                # FILTRES
+                col_f1, col_f2 = st.columns([1, 2])
+                filieres = df_activity['Filière_Scope'].unique()
+                selected_stream = col_f1.selectbox("Filtrer par Filière (Délégué)", ['TOUTES'] + list(filieres))
+            
+                if selected_stream != 'TOUTES':
+                    df_filtered_activity = df_activity[df_activity['Filière_Scope'] == selected_stream]
+                else:
+                    df_filtered_activity = df_activity
+
+                col_f2.metric(
+                    "Total de sessions affichées", 
+                    len(df_filtered_activity), 
+                    f"Dernière mise à jour : {datetime.now().strftime('%H:%M:%S')}"
+                )
+            
+                st.dataframe(
+                    df_filtered_activity,
+                    column_order=[
+                        "Date_Session", 
+                        "Heure_Remplissage_Estimée", 
+                        "Filière_Scope", 
+                        "Matière", 
+                        "Statut_Remplissage"
+                    ],
+                    column_config={
+                        "Heure_Remplissage_Estimée": st.column_config.TimeColumn("Heure (Proxy)")
+                    },
+                    hide_index=True,
+                    use_container_width=True
+                )
 # ----------------------------------------------------------------------------------
 # FIN DE LA SECTION SUPER ADMIN
 # ----------------------------------------------------------------------------------
@@ -1856,6 +1856,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
