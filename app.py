@@ -814,7 +814,7 @@ if not st.session_state['user_role']:
         st.markdown('<div class="main-container">', unsafe_allow_html=True)
         
         # EN-TÊTE
-            st.markdown("""
+        st.markdown("""
             <div class='main-header animate-fade-in'>
                 <h1 style='margin: 0;'>Suivi Académique en Temps Réel</h1>
                 <p style='color: rgba(255,255,255,0.9); font-size: clamp(0.95rem, 2.2vw, 1.1rem); margin-top: 0.5rem;'>
@@ -1859,6 +1859,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
