@@ -998,7 +998,9 @@ for idx, (icon, title, desc, color) in enumerate(features):
                 </p>
             </div>
             """, unsafe_allow_html=True)
-        
+            
+        # Cette ligne FERME le conteneur principal démarré plus haut.
+        # Elle DOIT être au même niveau d'indentation que le st.columns qui la précède.
         st.markdown('</div>', unsafe_allow_html=True)
     
     else:
@@ -1768,6 +1770,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
