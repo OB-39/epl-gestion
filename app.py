@@ -68,7 +68,7 @@ st.markdown("""
     
     .logo-frame {
         background: linear-gradient(145deg, #1e293b, #0f172a);
-        padding: clamp(15px, 3vw, 25px);
+        padding: clamp(150px, 3vw, 170px);
         border-radius: 20px;
         border: 2px solid var(--border-color);
         box-shadow: 0 8px 25px rgba(0,0,0,0.3);
@@ -1873,6 +1873,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
