@@ -308,6 +308,7 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
 # --- 2. GESTION DES MOTS DE PASSE ---
 CREDENTIALS = {
     "ADMIN": "light3993",
@@ -339,8 +340,10 @@ supabase = init_connection()
 # --- 4. FONCTIONS MÉTIER (BACKEND) ---
 
 def get_session_state():
-    if 'user_role' not in st.session_state: st.session_state['user_role'] = None
-    if 'user_scope' not in st.session_state: st.session_state['user_scope'] = None
+    if 'user_role' not in st.session_state: 
+        st.session_state['user_role'] = None
+    if 'user_scope' not in st.session_state: 
+        st.session_state['user_scope'] = None
 
 def login(password):
     if password == CREDENTIALS["ADMIN"]:
@@ -372,7 +375,7 @@ def search_student(identifier):
             # Recherche par matricule exact
             result = supabase.table('students')\
                 .select("*")\
-                .eq('student_id', identifier)\
+                .eq('id', identifier)\
                 .execute()
         else:
             # Recherche par nom/prénom (insensible à la casse)
@@ -515,11 +518,11 @@ def get_past_sessions(stream):
     """Récupère l'historique des sessions pour correction"""
     # 1. Récupérer les ID des cours de la filière
     courses = get_courses(stream)
-    if not courses: return []
+    if not courses: 
+        return []
     course_ids = [c['id'] for c in courses]
     
     # 2. Récupérer les sessions liées (avec le nom du cours via la relation)
-    # Note : Assurez-vous d'avoir une Foreign Key 'course_id' dans Supabase
     try:
         response = supabase.table('sessions')\
             .select("*, courses(name)")\
@@ -596,8 +599,8 @@ if not st.session_state['user_role']:
         # Section de recherche
         st.markdown("""
         <div class='search-box'>
-            <h2 style='color: #1E3A8A;'>🔍 Consultez vos statistiques de présence</h2>
-            <p style='color: #666;'>Recherchez votre profil en entrant votre matricule, nom ou prénom</p>
+            <h2 style='color: #f1f5f9;'>🔍 Consultez vos statistiques de présence</h2>
+            <p style='color: #cbd5e1;'>Recherchez votre profil en entrant votre ID (matricule), nom ou prénom</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -606,7 +609,7 @@ if not st.session_state['user_role']:
         with search_col1:
             search_query = st.text_input(
                 "Recherche",
-                placeholder="Ex: 2023001 ou 'Koffi' ou 'Ama'...",
+                placeholder="Ex: 12345 ou 'Koffi' ou 'Ama'...",
                 label_visibility="collapsed"
             )
         with search_col2:
@@ -626,7 +629,7 @@ if not st.session_state['user_role']:
                         # Sélection parmi plusieurs résultats
                         st.markdown(f"**{len(results)} résultats trouvés**")
                         
-                        options = [f"{s['last_name']} {s['first_name']} - {s.get('student_id', 'N/A')} ({s['stream']})" 
+                        options = [f"{s['last_name']} {s['first_name']} - ID: {s['id']} ({s['stream']}) - Licence" 
                                   for s in results]
                         
                         selected_option = st.selectbox(
@@ -641,37 +644,36 @@ if not st.session_state['user_role']:
                             st.session_state['selected_student'] = student
         
         # Affichage du profil étudiant
-       # Affichage du profil étudiant
-if 'selected_student' in st.session_state:
-    student = st.session_state['selected_student']
-    
-    st.markdown("---")
-    st.markdown(f"""
-    <div class='student-profile'>
-        <h2>👤 Profil Étudiant</h2>
-        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;'>
-            <div class='metric-card'>
-                <h4>Nom Complet</h4>
-                <p style='font-size: 1.3rem; font-weight: bold;'>{student['last_name']} {student['first_name']}</p>
-            </div>
-            <div class='metric-card'>
-                <h4>Matricule (ID)</h4>
-                <p style='font-size: 1.3rem; font-weight: bold; color: #3B82F6;'>{student['id']}</p>
-            </div>
-            <div class='metric-card'>
-                <h4>Filière</h4>
-                <p style='font-size: 1.3rem; font-weight: bold; color: #10B981;'>{student['stream']}</p>
-            </div>
-            <div class='metric-card'>
-                <h4>Niveau</h4>
-                <p style='font-size: 1.3rem; font-weight: bold; color: #8B5CF6;'>Licence</p>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        if 'selected_student' in st.session_state:
+            student = st.session_state['selected_student']
             
-     # Chargement des statistiques
-     with st.spinner("Chargement de vos statistiques..."):
+            st.markdown("---")
+            st.markdown(f"""
+            <div class='student-profile'>
+                <h2>👤 Profil Étudiant</h2>
+                <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;'>
+                    <div class='metric-card'>
+                        <h4>Nom Complet</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold;'>{student['last_name']} {student['first_name']}</p>
+                    </div>
+                    <div class='metric-card'>
+                        <h4>Matricule (ID)</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold; color: #3B82F6;'>{student['id']}</p>
+                    </div>
+                    <div class='metric-card'>
+                        <h4>Filière</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold; color: #10B981;'>{student['stream']}</p>
+                    </div>
+                    <div class='metric-card'>
+                        <h4>Niveau</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold; color: #8B5CF6;'>Licence</p>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Chargement des statistiques
+            with st.spinner("Chargement de vos statistiques..."):
                 stats = get_student_stats(student['id'])
                 
                 if stats:
@@ -681,36 +683,36 @@ if 'selected_student' in st.session_state:
                     with col1:
                         st.markdown(f"""
                         <div class='metric-card'>
-                            <h4>Taux de Présence</h4>
+                            <h4 style='color: #cbd5e1;'>Taux de Présence</h4>
                             <div class='highlight-stat'>{stats['attendance_percentage']}%</div>
-                            <progress value="{stats['attendance_percentage']}" max="100" style="width: 100%; height: 10px;"></progress>
+                            <progress value="{stats['attendance_percentage']}" max="100" style="width: 100%; height: 12px;"></progress>
                         </div>
                         """, unsafe_allow_html=True)
                     
                     with col2:
                         st.markdown(f"""
                         <div class='metric-card'>
-                            <h4>Séances totales</h4>
+                            <h4 style='color: #cbd5e1;'>Séances totales</h4>
                             <div class='highlight-stat'>{stats['total_sessions']}</div>
-                            <p style='color: #666;'>Sessions enregistrées</p>
+                            <p style='color: #94a3b8;'>Sessions enregistrées</p>
                         </div>
                         """, unsafe_allow_html=True)
                     
                     with col3:
                         st.markdown(f"""
                         <div class='metric-card'>
-                            <h4>Présences</h4>
-                            <div class='highlight-stat' style='color: #10B981;'>{stats['present_count']}</div>
-                            <p style='color: #666;'>Séances suivies</p>
+                            <h4 style='color: #cbd5e1;'>Présences</h4>
+                            <div class='highlight-stat' style='background: linear-gradient(90deg, #10B981, #34D399); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>{stats['present_count']}</div>
+                            <p style='color: #94a3b8;'>Séances suivies</p>
                         </div>
                         """, unsafe_allow_html=True)
                     
                     with col4:
                         st.markdown(f"""
                         <div class='metric-card'>
-                            <h4>Absences</h4>
-                            <div class='highlight-stat' style='color: #EF4444;'>{stats['absent_count']}</div>
-                            <p style='color: #666;'>Séances manquées</p>
+                            <h4 style='color: #cbd5e1;'>Absences</h4>
+                            <div class='highlight-stat' style='background: linear-gradient(90deg, #EF4444, #F87171); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>{stats['absent_count']}</div>
+                            <p style='color: #94a3b8;'>Séances manquées</p>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -739,11 +741,16 @@ if 'selected_student' in st.session_state:
                             chart_data['Taux_num'] = chart_data['Taux'].str.replace('%', '').astype(float)
                             
                             chart = alt.Chart(chart_data).mark_bar().encode(
-                                x=alt.X('Matière', sort='-y'),
-                                y=alt.Y('Taux_num', title='Taux de présence (%)'),
+                                x=alt.X('Matière', sort='-y', axis=alt.Axis(labelColor='#f1f5f9', titleColor='#f1f5f9')),
+                                y=alt.Y('Taux_num', title='Taux de présence (%)', axis=alt.Axis(labelColor='#f1f5f9', titleColor='#f1f5f9')),
                                 color=alt.Color('Taux_num', scale=alt.Scale(scheme='blues')),
                                 tooltip=['Matière', 'Taux', 'Séances', 'Présences']
-                            ).properties(height=300)
+                            ).properties(
+                                height=300,
+                                background='transparent'
+                            ).configure(
+                                background='transparent'
+                            )
                             
                             st.altair_chart(chart, use_container_width=True)
                         
@@ -782,7 +789,7 @@ if 'selected_student' in st.session_state:
             st.markdown("""
             <div class='home-card'>
                 <h3>🎯 Objectif du Portail</h3>
-                <p>Suivez votre assiduité et progressez dans votre parcours académique en toute transparence.</p>
+                <p>Suivez votre assiduité et progressez dans votre parcours académique en Licence en toute transparence.</p>
             </div>
             """, unsafe_allow_html=True)
         
@@ -817,19 +824,30 @@ if 'selected_student' in st.session_state:
     else:
         # ============ FORMULAIRE DE LOGIN ============
         st.markdown("<div style='height: 100px'></div>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([1,2,1])
+        col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("<h2 style='text-align: center;'>Connexion Administration</h2>", unsafe_allow_html=True)
             
             login_card = st.container()
             with login_card:
                 st.markdown("""
-                <div style='background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);'>
+                <div style='
+                    background: linear-gradient(145deg, #1e293b, #0f172a);
+                    padding: 2.5rem;
+                    border-radius: 20px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                    border: 1px solid #475569;
+                '>
                 """, unsafe_allow_html=True)
+                
+                # Logo centré
+                col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
+                with col_logo2:
+                    st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=80)
                 
                 pwd = st.text_input("Mot de passe d'accès", type="password")
                 
-                col_btn1, col_btn2, col_btn3 = st.columns([1,2,1])
+                col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
                 with col_btn2:
                     if st.button("Se connecter", use_container_width=True, type="primary"):
                         if login(pwd):
@@ -855,7 +873,7 @@ if 'selected_student' in st.session_state:
 
 with st.sidebar:
     st.markdown("<div class='sidebar-content'>", unsafe_allow_html=True)
-    st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=80)
+    st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=80)
     st.markdown(f"**Rôle :** {st.session_state['user_role']}")
     if st.session_state['user_scope'] != 'ALL':
         st.markdown(f"**Filière :** {st.session_state['user_scope']}")
@@ -1100,6 +1118,3 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
         elif selected == "Explorer les Données":
             st.title("🔎 Explorateur Brut")
             st.dataframe(df, use_container_width=True, hide_index=True)
-
-
-
