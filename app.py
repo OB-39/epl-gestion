@@ -1,3 +1,4 @@
+from datetime import datetime, timezone 
 import streamlit as st
 from supabase import create_client
 import pandas as pd
@@ -719,15 +720,13 @@ def update_attendance_correction(session_id, updated_presence_map, all_students)
 @st.cache_data(ttl=60)
 def get_delegate_activity_log():
     """
-    Récupère la liste des sessions enregistrées et les informations de création.
-    La date et l'heure de création sont implicitement 'date_time' dans la table 'sessions'.
+    Récupère la liste des sessions enregistrées et les informations de création réelles (created_at).
     """
     try:
-        # Nous supposons que la date_time de la session est proche de l'heure de remplissage.
-        # Nous joignons les sessions aux cours pour obtenir la filière (scope).
+        # Récupère l'heure de CRÉATION réelle (created_at) et la date de la session (date_time)
         result = supabase.table('sessions') \
-            .select("id, date_time, course_id, courses(name, stream_target)") \
-            .order('date_time', desc=True) \
+            .select("id, created_at, date_time, course_id, courses(name, stream_target)") \
+            .order('created_at', desc=True) \
             .limit(100) \
             .execute()
             
@@ -736,33 +735,45 @@ def get_delegate_activity_log():
             return pd.DataFrame()
 
         log_data = []
+        now_utc = datetime.now(timezone.utc)
+        
         for row in data:
             course_name = row.get('courses', {}).get('name', 'N/A')
             stream = row.get('courses', {}).get('stream_target', 'N/A')
-            session_id = row.get('id')
             
-            # Pour l'instant, l'utilisateur créateur n'est pas stocké dans la BD.
-            # Nous utilisons la filière (stream) comme ID du Délégué responsable.
+            # Heure réelle de remplissage (création de l'enregistrement dans la BD)
+            filling_date_aware = datetime.fromisoformat(row['created_at'])
             
-            # Déterminer si la session est dans le passé pour l'état de remplissage
+            # Date de la session prévue (pour déterminer si elle est passée)
             session_date = datetime.fromisoformat(row['date_time'])
-            status = "Complet" if session_date < datetime.now() else "Planifié"
+
+            # Rendre la date de session aware en UTC pour la comparaison si elle ne l'est pas
+            if session_date.tzinfo is None:
+                session_date = session_date.replace(tzinfo=timezone.utc) 
             
+            # Comparaison aware vs aware (CORRECTION DE L'ERREUR)
+            status = "Complet" if session_date < now_utc else "Planifié"
+            
+            # Conversion des dates pour l'affichage (heure locale du système)
+            display_filling_date = filling_date_aware.astimezone(tz=None).strftime("%d/%m/%Y")
+            display_filling_time = filling_date_aware.astimezone(tz=None).strftime("%H:%M:%S")
+
             log_data.append({
-                'Session_ID': session_id,
-                'Filière_Scope': stream,
+                'Délégué_Responsable': stream, # Proxy pour l'identité du délégué
                 'Matière': course_name,
-                'Date_Session': session_date.strftime("%d/%m/%Y"),
-                'Heure_Remplissage_Estimée': session_date.strftime("%H:%M:%S"),
-                'Statut_Remplissage': status
+                'Date_Session_Prévue': session_date.astimezone(tz=None).strftime("%d/%m/%Y"),
+                'Heure_Remplissage_Reelle': display_filling_time,
+                'Date_Remplissage_Reelle': display_filling_date,
+                'Statut_Session': status
             })
             
         return pd.DataFrame(log_data)
     
     except Exception as e:
-        st.warning(f"Impossible de charger le journal d'activité: {e}")
+        # L'erreur de données vide ne sera plus affichée si le DataFrame est vide
+        st.error(f"Erreur technique lors du chargement du journal: {e}")
         return pd.DataFrame()
-
+        
 def get_global_stats():
     try:
         return supabase.from_('student_stats').select("*").execute().data
@@ -1402,8 +1413,8 @@ elif selected == "🛡️ Super Admin":
     "👨‍🎓 Gestion des Étudiants", 
     "📥 Exporter les Données", 
     "⚙️ Maintenance", 
-    "⏳ Journal d'Activité" # Nouvel onglet
-    ])    
+    "⏳ Journal d'Activité" # Le nouvel onglet
+    ])
     # =========================================================
     # 1.1. Onglet Gestion des Étudiants
     # =========================================================
@@ -1780,49 +1791,55 @@ elif selected == "🛡️ Super Admin":
                 st.error(f"❌ Erreur lors de la sauvegarde. Détails techniques: {e}")
 
     # =========================================================
-    # 1.4. NOUVEL Onglet Journal d'Activité des Délégués
+    # 1.4. Onglet Journal d'Activité des Délégués (Traçabilité)
     # =========================================================
-        with tab_activite:
-            st.header("⏳ Journal d'Activité des Sessions")
-            st.info("Affiche les 100 dernières sessions enregistrées, avec l'heure de la séance comme indicateur d'heure de remplissage.")
+    with tab_activite:
+        st.header("⏳ Journal d'Activité et Traçabilité")
+        st.info("""
+        Affiche les 100 dernières sessions créées (journal de remplissage). 
+        Le **Délégué Responsable** est identifié par sa filière d'accès.
+        """)
         
-            df_activity = get_delegate_activity_log()
+        df_activity = get_delegate_activity_log()
         
-            if df_activity.empty:
-                st.warning("Aucune donnée de session trouvée pour le moment.")
+        if df_activity.empty:
+            st.warning("Aucune donnée de session trouvée pour le moment.")
+        else:
+            
+            # FILTRES
+            col_f1, col_f2 = st.columns([1, 2])
+            filieres = df_activity['Délégué_Responsable'].unique()
+            selected_stream = col_f1.selectbox("Filtrer par Filière (Délégué)", ['TOUTES'] + list(filieres))
+            
+            if selected_stream != 'TOUTES':
+                df_filtered_activity = df_activity[df_activity['Délégué_Responsable'] == selected_stream]
             else:
-            
-                # FILTRES
-                col_f1, col_f2 = st.columns([1, 2])
-                filieres = df_activity['Filière_Scope'].unique()
-                selected_stream = col_f1.selectbox("Filtrer par Filière (Délégué)", ['TOUTES'] + list(filieres))
-            
-                if selected_stream != 'TOUTES':
-                    df_filtered_activity = df_activity[df_activity['Filière_Scope'] == selected_stream]
-                else:
-                    df_filtered_activity = df_activity
+                df_filtered_activity = df_activity
 
-                col_f2.metric(
-                    "Total de sessions affichées", 
-                    len(df_filtered_activity), 
-                    f"Dernière mise à jour : {datetime.now().strftime('%H:%M:%S')}"
-                )
+            col_f2.metric(
+                "Total de sessions affichées", 
+                len(df_filtered_activity), 
+                f"Dernière mise à jour : {datetime.now().strftime('%H:%M:%S')}"
+            )
             
-                st.dataframe(
-                    df_filtered_activity,
-                    column_order=[
-                        "Date_Session", 
-                        "Heure_Remplissage_Estimée", 
-                        "Filière_Scope", 
-                        "Matière", 
-                        "Statut_Remplissage"
-                    ],
-                    column_config={
-                        "Heure_Remplissage_Estimée": st.column_config.TimeColumn("Heure (Proxy)")
-                    },
-                    hide_index=True,
-                    use_container_width=True
-                )
+            # Affichage de la traçabilité complète
+            st.dataframe(
+                df_filtered_activity,
+                column_order=[
+                    "Délégué_Responsable", 
+                    "Date_Remplissage_Reelle",
+                    "Heure_Remplissage_Reelle", 
+                    "Matière", 
+                    "Date_Session_Prévue",
+                    "Statut_Session"
+                ],
+                column_config={
+                    "Heure_Remplissage_Reelle": st.column_config.TimeColumn("Heure Remplissage"),
+                    "Délégué_Responsable": st.column_config.TextColumn("Délégué (Filière)")
+                },
+                hide_index=True,
+                use_container_width=True
+            )
 # ----------------------------------------------------------------------------------
 # FIN DE LA SECTION SUPER ADMIN
 # ----------------------------------------------------------------------------------
@@ -1856,6 +1873,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
