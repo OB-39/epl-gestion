@@ -853,4 +853,24 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
             red_list = df[df['attendance_percentage'] < 50].sort_values('attendance_percentage')
             
             if red_list.empty:
-                st.success("Aucun étudiant en dess
+                st.success("Aucun étudiant en dessous de 50%.")
+            else:
+                st.error(f"{len(red_list)} étudiants nécessitent une attention particulière.")
+                
+                st.dataframe(
+                    red_list[['first_name', 'last_name', 'stream', 'attendance_percentage', 'absent_count']],
+                    column_config={
+                        "attendance_percentage": st.column_config.ProgressColumn("Taux", format="%.1f%%", min_value=0, max_value=100),
+                        "absent_count": st.column_config.NumberColumn("Absences Total"),
+                    },
+                    use_container_width=True,
+                    hide_index=True
+                )
+                
+                if st.button("Copier la liste pour email"):
+                    st.toast("Liste copiée (simulation)", icon="📧")
+
+        # --- SOUS-PAGE : EXPLORATEUR ---
+        elif selected == "Explorer les Données":
+            st.title("🔎 Explorateur Brut")
+            st.dataframe(df, use_container_width=True, hide_index=True)
