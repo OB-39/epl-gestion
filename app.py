@@ -515,25 +515,19 @@ st.markdown("""
 # =========================================================
 LOGO_URL = "https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3"
 
-CREDENTIALS = {
-    "ADMIN": "light3993",
-    "PROF": "ayeleh@edo",
-    "DELEGATES": {
-        "pass_lt_2024": "LT",
-        "pass_gc_2024": "GC",
-        "pass_iabd_2024": "IABD",
-        "pass_is_2024": "IS",
-        "pass_ge_2024": "GE",
-        "pass_gm_2024": "GM"
-    }
-}
-
+# --- Chargement des clés Supabase (doit rester dans secrets.toml) ---
 try:
     SUPABASE_URL = st.secrets["SUPABASE_URL"]
     SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-except:
-    st.error("🚨 Clés Supabase manquantes ! Ajoutez-les dans .streamlit/secrets.toml")
+    
+    # NOTE: Plus besoin de charger ADMIN_PWD ou PROF_PWD ici
+    
+except KeyError as e:
+    st.error(f"🚨 Clé Supabase manquante ! Vérifiez si la clé {e} existe dans votre .streamlit/secrets.toml")
     st.stop()
+
+# NOTE: La variable CREDENTIALS n'est plus nécessaire ici. 
+# La logique de connexion utilise désormais get_all_user_credentials().
 
 @st.cache_resource
 def init_connection():
@@ -551,20 +545,40 @@ def get_session_state():
         st.session_state['user_scope'] = None
 
 def login(password):
-    if password == CREDENTIALS["ADMIN"]:
-        st.session_state['user_role'] = 'ADMIN'
-        st.session_state['user_scope'] = 'ALL'
+    # 1. Charger tous les identifiants depuis la BD (câché pendant 30s)
+    all_creds = get_all_user_credentials()
+    
+    # 2. Vérifier si le mot de passe correspond à une entrée
+    if password in all_creds:
+        user_info = all_creds[password]
+        
+        st.session_state['user_role'] = user_info['role']
+        st.session_state['user_scope'] = user_info['scope']
+        
         return True
-    elif password == CREDENTIALS["PROF"]:
-        st.session_state['user_role'] = 'PROF'
-        st.session_state['user_scope'] = 'ALL'
-        return True
-    elif password in CREDENTIALS["DELEGATES"]:
-        st.session_state['user_role'] = 'DELEGATE'
-        st.session_state['user_scope'] = CREDENTIALS["DELEGATES"][password]
-        return True
+    
     return False
 
+@st.cache_data(ttl=30)
+def get_all_user_credentials():
+    """Charge TOUS les identifiants (Staff et Délégués) depuis la table Supabase."""
+    try:
+        # Récupère l'ID (scope), le rôle et le mot de passe
+        result = supabase.table('delegate_access').select("id, role, password").execute()
+        
+        # Structure de sortie : {password: {'role': role, 'scope': id}}
+        credentials_map = {}
+        for item in result.data:
+            credentials_map[item['password']] = {
+                'role': item['role'],
+                # Si le rôle est Staff, le scope est ALL. Sinon, le scope est l'id (la filière).
+                'scope': 'ALL' if item['role'] in ['ADMIN', 'PROF'] else item['id']
+            }
+        return credentials_map
+    except Exception as e:
+        st.error(f"Erreur lors du chargement des identifiants: {e}")
+        return {}
+        
 @st.cache_data(ttl=600)
 def search_student(identifier):
     try:
@@ -1608,87 +1622,127 @@ elif selected == "🛡️ Super Admin":
                     type="secondary"
                 )
     
-    # =========================================================
-    # 1.3. Onglet Maintenance
-    # =========================================================
-    with tab_autres:
-        st.subheader("⚙️ Outils de Maintenance")
+   # =========================================================
+# 1.3. Onglet Maintenance
+# =========================================================
+with tab_autres:
+    st.subheader("⚙️ Outils de Maintenance")
+    
+    col_maint1, col_maint2 = st.columns(2)
+    
+    # -----------------------------------------------------
+    # COLONNE 1 : Caches & Statistiques BD
+    # -----------------------------------------------------
+    with col_maint1:
+        st.markdown("#### 🔄 Gestion des Caches")
+        if st.button("🗑️ Purger tous les caches", 
+                     help="Force le rechargement de toutes les données depuis Supabase",
+                     use_container_width=True,
+                     type="secondary"):
+            st.cache_data.clear()
+            st.cache_resource.clear()
+            # Vider le cache de la fonction d'accès spécifique (si elle existe encore)
+            if 'get_all_user_credentials' in globals():
+                get_all_user_credentials.clear()
+            
+            st.success("✅ Caches purgés. Les prochaines requêtes rechargeront les données.")
+            time.sleep(1)
+            st.rerun()
+            
+        st.markdown("---")
         
-        col_maint1, col_maint2 = st.columns(2)
+        st.markdown("#### 📊 Statistiques Base de Données")
+        try:
+            # Les requêtes de comptage sont conservées
+            students_count = supabase.table('students').select("*", count="exact").execute().count
+            attendance_count = supabase.table('attendance').select("*", count="exact").execute().count
+            sessions_count = supabase.table('sessions').select("*", count="exact").execute().count
+            
+            st.metric("👨‍🎓 Étudiants", students_count or 0)
+            st.metric("📋 Enregistrements de présence", attendance_count or 0)
+            st.metric("📅 Sessions de cours", sessions_count or 0)
+            
+        except Exception as e:
+            st.error(f"❌ Erreur de statistiques: {str(e)}")
+            
+    # -----------------------------------------------------
+    # COLONNE 2 : Gestion des Accès & Nettoyage
+    # -----------------------------------------------------
+    with col_maint2:
+        st.markdown("#### 🔑 Gestion des Accès (Tous les Rôles)")
         
-        with col_maint1:
-            st.markdown("#### 🔄 Gestion des Caches")
-            if st.button("🗑️ Purger tous les caches", 
-                        help="Force le rechargement de toutes les données depuis Supabase",
-                        use_container_width=True,
-                        type="secondary"):
-                st.cache_data.clear()
-                st.cache_resource.clear()
-                st.success("✅ Caches purgés. Les prochaines requêtes rechargeront les données.")
-                time.sleep(1)
-                st.rerun()
-            
-            st.markdown("---")
-            
-            st.markdown("#### 📊 Statistiques Base de Données")
-            try:
-                # Compter les étudiants
-                students_count = supabase.table('students').select("*", count="exact").execute().count
-                # Compter les présences
-                attendance_count = supabase.table('attendance').select("*", count="exact").execute().count
-                # Compter les sessions
-                sessions_count = supabase.table('sessions').select("*", count="exact").execute().count
-                
-                st.metric("👨‍🎓 Étudiants", students_count or 0)
-                st.metric("📋 Enregistrements de présence", attendance_count or 0)
-                st.metric("📅 Sessions de cours", sessions_count or 0)
-                
-            except Exception as e:
-                st.error(f"❌ Erreur de statistiques: {str(e)}")
-        
-        with col_maint2:
-            st.markdown("#### 🔑 Gestion des Accès")
-            
-            st.info("Mots de passe des délégués (lecture seule) :")
-            
-            # Afficher les mots de passe des délégués (sécurisé - en lecture seule)
-            delegates_data = []
-            for pass_key, stream in CREDENTIALS["DELEGATES"].items():
-                delegates_data.append({
-                    "Filière": stream,
-                    "Mot de passe": pass_key,
-                    "Rôle": "Délégué"
-                })
-            
-            if delegates_data:
-                delegates_df = pd.DataFrame(delegates_data)
-                st.dataframe(
-                    delegates_df,
-                    column_config={
-                        "Mot de passe": st.column_config.TextColumn(
-                            "Mot de passe",
-                            help="Mot de passe d'accès pour les délégués"
-                        )
-                    },
-                    use_container_width=True,
-                    hide_index=True
-                )
-            else:
-                st.warning("Aucun délégué configuré.")
-            
-            st.markdown("---")
-            
-            st.markdown("#### 🧹 Nettoyage des Données")
-            st.warning("⚠️ Actions irréversibles")
-            
-            # Option pour supprimer les données de test
-            if st.button("🧪 Supprimer données de test", 
-                        help="À utiliser avec précaution !",
-                        use_container_width=True,
-                        type="secondary",
-                        disabled=True):  # Désactivé par sécurité
-                st.info("Cette fonctionnalité est désactivée pour des raisons de sécurité.")
+        # 1. Chargement de TOUS les identifiants depuis Supabase
+        # NOTE : get_all_user_credentials() doit être définie dans la section des fonctions backend
+        if 'get_all_user_credentials' in globals():
+            all_creds_map = get_all_user_credentials()
+        else:
+            st.error("Fonction 'get_all_user_credentials' non trouvée. Veuillez l'ajouter dans la section 4.")
+            all_creds_map = {}
 
+        # 2. Préparation des données pour affichage et édition
+        display_data = []
+        for pwd, info in all_creds_map.items():
+            display_data.append({
+                "ID/Scope": info['scope'],
+                "Rôle": info['role'],
+                "Mot de Passe": pwd
+            })
+        df_users = pd.DataFrame(display_data)
+
+        st.caption("Double-cliquez sur un mot de passe pour le modifier. (ID/Scope : ADMIN, PROF, LT, GC, etc.)")
+        
+        edited_df = st.data_editor(
+            df_users,
+            column_config={
+                "ID/Scope": st.column_config.TextColumn(disabled=True),
+                "Rôle": st.column_config.TextColumn(disabled=True),
+                "Mot de Passe": st.column_config.TextColumn(
+                    "Mot de Passe", 
+                    help="Modifier le mot de passe pour cet ID/Rôle."
+                )
+            },
+            hide_index=True,
+            use_container_width=True
+        )
+
+        # 3. Traitement de l'enregistrement
+        if st.button("💾 Enregistrer les Mots de Passe Modifiés", type="primary", use_container_width=True):
+            try:
+                records_to_upsert = []
+                for index, row in edited_df.iterrows():
+                    records_to_upsert.append({
+                        "id": row['ID/Scope'], # Clé primaire pour l'upsert
+                        "role": row['Rôle'], 
+                        "password": row['Mot de Passe']
+                    })
+                
+                # Upsert vers la table Supabase (supposée être 'delegate_access' ou 'user_access')
+                # J'utilise 'delegate_access' pour rester cohérent avec les discussions précédentes.
+                supabase.table('delegate_access').upsert(records_to_upsert, on_conflict='id').execute()
+                
+                # Vider le cache pour forcer la fonction login à recharger les nouveaux mots de passe
+                if 'get_all_user_credentials' in globals():
+                    get_all_user_credentials.clear() 
+                
+                st.success("✅ Mots de passe mis à jour avec succès pour tous les rôles !")
+                time.sleep(1.5)
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"❌ Erreur lors de la sauvegarde: {e}")
+        
+        st.markdown("---")
+        
+        st.markdown("#### 🧹 Nettoyage des Données")
+        st.warning("⚠️ Actions irréversibles")
+        
+        # Option pour supprimer les données de test (conservée mais désactivée)
+        if st.button("🧪 Supprimer données de test", 
+                     help="À utiliser avec précaution !",
+                     use_container_width=True,
+                     type="secondary",
+                     disabled=True): # Désactivé par sécurité
+            st.info("Cette fonctionnalité est désactivée pour des raisons de sécurité.")
 # ----------------------------------------------------------------------------------
 # FIN DE LA SECTION SUPER ADMIN
 # ----------------------------------------------------------------------------------
@@ -1722,6 +1776,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
