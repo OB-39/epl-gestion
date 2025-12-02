@@ -740,33 +740,55 @@ if not st.session_state['user_role']:
     if not st.session_state['show_login']:
         # ============ PAGE D'ACCUEIL PUBLIQUE ============
         
-        # BARRE D'ACCÈS ADMIN EN HAUT
-        st.markdown("""
-        <div class="admin-access-bar animate-fade-in">
+        # --- BARRE D'ACCÈS ADMIN RESPONSIVE ---
+            st.markdown("""
+    <div class="admin-access-bar animate-fade-in">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="font-size: 1.2rem;">🎓</div>
-                <span style="font-weight: bold; color: #f1f5f9;">Portail Étudiant EPL</span>
-            </div>
-            <button class="admin-access-button" onclick="window.location.href='?admin=true'">
-                🔑 Accès Administration
+            <div style="font-size: clamp(1rem, 2vw, 1.2rem);">🎓</div>
+            <span style="font-weight: bold; color: #f1f5f9; font-size: clamp(0.9rem, 2vw, 1rem);">
+                Portail Étudiant EPL
+            </span>
+        </div>
+        
+        <!-- Bouton visible sur desktop -->
+        <div class="hide-on-mobile">
+            <button class="admin-access-button" onclick="triggerAdminLogin()">
+                🔑 Accès Admin
             </button>
         </div>
-        """, unsafe_allow_html=True)
         
-        # JavaScript pour gérer le clic sur le bouton admin
-        st.markdown("""
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const adminBtn = document.querySelector('.admin-access-button');
-            if (adminBtn) {
-                adminBtn.addEventListener('click', function() {
-                    window.streamlitRunPython?.(`st.session_state['show_login'] = True; st.rerun()`);
-                });
-            }
-        });
-        </script>
-        """, unsafe_allow_html=True)
-        
+        <!-- Bouton mobile simplifié -->
+        <div class="show-on-mobile-only" style="display: none;">
+            <button class="admin-access-button" onclick="triggerAdminLogin()" 
+                    style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                🔑 Admin
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.show-on-mobile-only { display: none; }
+@media (max-width: 768px) {
+    .hide-on-mobile { display: none; }
+    .show-on-mobile-only { display: block; }
+}
+</style>
+
+<script>
+function triggerAdminLogin() {
+    // Simuler un clic sur un bouton Streamlit caché
+    const hiddenBtn = document.querySelector('button[data-testid="adminAccessTrigger"]');
+    if (hiddenBtn) hiddenBtn.click();
+}
+</script>
+""", unsafe_allow_html=True)
+
+# Bouton Streamlit caché pour déclencher l'action
+            if st.button(" ", key="adminAccessTrigger", help="hidden", type="primary"):
+            st.session_state['show_login'] = True
+            st.rerun()
         # Conteneur principal
         st.markdown('<div class="main-container">', unsafe_allow_html=True)
         
@@ -1358,3 +1380,4 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
 
         elif selected == "Explorer les Données":
             st.dataframe(df, use_container_width=True, hide_index=True)
+
