@@ -306,25 +306,25 @@ st.markdown("""
         background: linear-gradient(90deg, var(--primary-blue), var(--blue-light));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: clamp(1.6rem, 4.5vw, 2.5rem) !important;
+        font-size: clamp(1.8rem, 5vw, 2.8rem) !important;
         line-height: 1.2 !important;
         margin-bottom: 0.8rem !important;
     }
     
     h2 {
         color: var(--text-primary) !important;
-        font-size: clamp(1.3rem, 3.5vw, 2rem) !important;
+        font-size: clamp(1.5rem, 4vw, 2.2rem) !important;
         margin-bottom: 1.2rem !important;
         line-height: 1.3 !important;
     }
     
     h3 {
-        font-size: clamp(1.1rem, 2.8vw, 1.4rem) !important;
+        font-size: clamp(1.2rem, 3.2vw, 1.6rem) !important;
         line-height: 1.3 !important;
     }
     
     h4 {
-        font-size: clamp(0.95rem, 2.2vw, 1.1rem) !important;
+        font-size: clamp(1.05rem, 2.5vw, 1.25rem) !important;
         line-height: 1.3 !important;
     }
     
@@ -1368,5 +1368,6 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
