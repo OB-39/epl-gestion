@@ -754,30 +754,26 @@ if not st.session_state['user_role']:
             </div>
             """, unsafe_allow_html=True)
             
-       with col2:
-    st.markdown("""
-    <div class='main-header animate-fade-in'>
-        <h1 style='margin: 0; font-size: clamp(2rem, 6vw, 3.5rem) !important;'>Suivi Académique en Temps Réel</h1>
-        <p style='color: rgba(255,255,255,0.9); font-size: clamp(1.1rem, 2.5vw, 1.3rem) !important; margin-top: 0.8rem;'>
-            Université de Lomé • École Polytechnique
-        </p>
-        <div style='margin-top: 1.5rem;'>
-            <span class='licence-badge animate-pulse' style='font-size: clamp(0.9rem, 2vw, 1.1rem) !important;'>
-                Programme Licence
-            </span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+        with col2:
+            st.markdown("""
+            <div class='main-header animate-fade-in'>
+                <h1 style='margin: 0;'>Suivi Académique en Temps Réel</h1>
+                <p style='color: rgba(255,255,255,0.9); font-size: clamp(0.95rem, 2.2vw, 1.1rem); margin-top: 0.5rem;'>
+                    Université de Lomé • École Polytechnique
+                </p>
+                <div style='margin-top: 1rem;'>
+                    <span class='licence-badge animate-pulse'>Programme Licence</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
         
         # SECTION RECHERCHE
-       st.markdown("""
-<div class='search-box animate-fade-in'>
-    <h2 style='color: #f1f5f9; margin-bottom: 1.2rem; font-size: clamp(1.6rem, 4.5vw, 2.5rem) !important;'>🔍 Vérifiez vos présences</h2>
-    <p style='color: #cbd5e1; font-size: clamp(1.05rem, 2.3vw, 1.25rem) !important;'>
-        Recherchez votre profil avec votre ID, nom ou prénom
-    </p>
-</div>
-""", unsafe_allow_html=True)
+        st.markdown("""
+        <div class='search-box animate-fade-in'>
+            <h2 style='color: #f1f5f9; margin-bottom: 1rem;'>🔍 Vérifiez vos présences</h2>
+            <p style='color: #cbd5e1;'>Recherchez votre profil avec votre ID, nom ou prénom</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # BARRE DE RECHERCHE
         search_container = st.container()
@@ -825,32 +821,45 @@ if not st.session_state['user_role']:
             student = st.session_state['selected_student']
             
             st.markdown("---")
-          st.markdown(f"""
-<div class='student-profile animate-fade-in'>
-    <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.8rem; flex-wrap: wrap; gap: 1.2rem;'>
-        <div>
-            <h2 style='margin: 0 0 0.8rem 0; font-size: clamp(1.6rem, 4vw, 2.2rem) !important;'>👤 Votre Profil Académique</h2>
-            <p style='color: #cbd5e1; margin: 0; font-size: clamp(1rem, 2.2vw, 1.2rem) !important;'>
-                Informations personnelles et statistiques
-            </p>
-        </div>
-        <span class='licence-badge' style='font-size: clamp(0.85rem, 1.8vw, 1rem) !important;'>
-            Licence • {student['stream']}
-        </span>
-    </div>
-    <div class='responsive-grid'>
-        <div class='metric-card'>
-            <h4 style='color: #94a3b8; margin-bottom: 0.8rem; font-size: clamp(1.05rem, 2.3vw, 1.25rem) !important;'>
-                Nom Complet
-            </h4>
-            <p style='font-size: clamp(1.2rem, 2.8vw, 1.5rem) !important; font-weight: bold; margin: 0; color: #f1f5f9;'>
-                {student['last_name'].upper()} {student['first_name']}
-            </p>
-        </div>
-        <!-- Répéter pour les autres cartes avec des tailles augmentées -->
-    </div>
-</div>
-""", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class='student-profile animate-fade-in'>
+                <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;'>
+                    <div>
+                        <h2 style='margin: 0 0 0.5rem 0;'>👤 Votre Profil Académique</h2>
+                        <p style='color: #cbd5e1; margin: 0;'>Informations personnelles et statistiques</p>
+                    </div>
+                    <span class='licence-badge'>Licence • {student['stream']}</span>
+                </div>
+                <div class='responsive-grid'>
+                    <div class='metric-card'>
+                        <h4 style='color: #94a3b8; margin-bottom: 0.5rem;'>Nom Complet</h4>
+                        <p style='font-size: clamp(1rem, 2.2vw, 1.2rem); font-weight: bold; margin: 0; color: #f1f5f9;'>
+                            {student['last_name'].upper()} {student['first_name']}
+                        </p>
+                    </div>
+                    <div class='metric-card'>
+                        <h4 style='color: #94a3b8; margin-bottom: 0.5rem;'>Matricule</h4>
+                        <p style='font-size: clamp(1.2rem, 2.8vw, 1.4rem); font-weight: bold; margin: 0; color: #3B82F6;'>
+                            {student['id']}
+                        </p>
+                        <small style='color: #64748b;'>Identifiant unique</small>
+                    </div>
+                    <div class='metric-card'>
+                        <h4 style='color: #94a3b8; margin-bottom: 0.5rem;'>Filière</h4>
+                        <p style='font-size: clamp(1rem, 2.2vw, 1.2rem); font-weight: bold; margin: 0; color: #10B981;'>
+                            {student['stream']}
+                        </p>
+                    </div>
+                    <div class='metric-card'>
+                        <h4 style='color: #94a3b8; margin-bottom: 0.5rem;'>Niveau</h4>
+                        <p style='font-size: clamp(1rem, 2.2vw, 1.2rem); font-weight: bold; margin: 0; color: #8B5CF6;'>
+                            Licence
+                        </p>
+                        <small style='color: #64748b;'>Cycle académique</small>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
             # STATISTIQUES
             with st.spinner("Chargement de vos statistiques..."):
@@ -1359,4 +1368,3 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
-
