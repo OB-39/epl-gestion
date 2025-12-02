@@ -1708,19 +1708,28 @@ with tab_autres:
         # 3. Traitement de l'enregistrement
         if st.button("💾 Enregistrer les Mots de Passe Modifiés", type="primary", use_container_width=True):
             try:
-                records_to_upsert = []
+                # NOUVELLE APPROCHE : Utiliser un dictionnaire pour garantir l'unicité
+                # Si Streamlit réorganise ou duplique, le dictionnaire prendra la dernière valeur unique.
+                unique_records = {} 
+                
+                # Itérer sur le DataFrame édité
                 for index, row in edited_df.iterrows():
-                    records_to_upsert.append({
-                        "id": row['ID/Scope'], # Clé primaire pour l'upsert
+                    record_id = row['ID/Scope']
+                    
+                    # Remplir le dictionnaire. Si l'ID est vu deux fois, il est écrasé.
+                    unique_records[record_id] = {
+                        "id": record_id, # Clé primaire pour l'upsert
                         "role": row['Rôle'], 
                         "password": row['Mot de Passe']
-                    })
+                    }
                 
-                # Upsert vers la table Supabase (supposée être 'delegate_access' ou 'user_access')
-                # J'utilise 'delegate_access' pour rester cohérent avec les discussions précédentes.
+                # Convertir les valeurs du dictionnaire en liste pour l'upsert
+                records_to_upsert = list(unique_records.values())
+
+                # Upsert vers la table Supabase
                 supabase.table('delegate_access').upsert(records_to_upsert, on_conflict='id').execute()
                 
-                # Vider le cache pour forcer la fonction login à recharger les nouveaux mots de passe
+                # Vider le cache de la fonction de connexion
                 if 'get_all_user_credentials' in globals():
                     get_all_user_credentials.clear() 
                 
@@ -1729,20 +1738,8 @@ with tab_autres:
                 st.rerun()
 
             except Exception as e:
-                st.error(f"❌ Erreur lors de la sauvegarde: {e}")
-        
-        st.markdown("---")
-        
-        st.markdown("#### 🧹 Nettoyage des Données")
-        st.warning("⚠️ Actions irréversibles")
-        
-        # Option pour supprimer les données de test (conservée mais désactivée)
-        if st.button("🧪 Supprimer données de test", 
-                     help="À utiliser avec précaution !",
-                     use_container_width=True,
-                     type="secondary",
-                     disabled=True): # Désactivé par sécurité
-            st.info("Cette fonctionnalité est désactivée pour des raisons de sécurité.")
+                # Afficher une erreur plus générique si l'erreur PostgreSQL n'est pas informative
+                st.error(f"❌ Erreur lors de la sauvegarde. Détails techniques: {e}")
 # ----------------------------------------------------------------------------------
 # FIN DE LA SECTION SUPER ADMIN
 # ----------------------------------------------------------------------------------
@@ -1776,6 +1773,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
