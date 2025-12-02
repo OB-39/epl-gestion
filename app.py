@@ -815,27 +815,17 @@ if not st.session_state['user_role']:
         
         # EN-TÊTE
         st.markdown("""
-            <div class='main-header animate-fade-in' style='display: flex; align-items: center; gap: 20px; padding-bottom: 20px;'>
-        
-                <div class='logo-frame-small' style='flex-shrink: 0;'>
-                    <div class='logo-corner logo-corner-tl'></div>
-                    <div class='logo-corner logo-corner-tr'></div>
-                    <div class='logo-corner logo-corner-bl'></div>
-                    <div class='logo-corner logo-corner-br'></div>
-                    <img src="{LOGO_URL}" alt="Logo EPL">
-                </div>
-        
-                <div style='flex-grow: 1;'>
-                    <h1 style='margin: 0;'>Suivi Académique en Temps Réel</h1>
-                    <p style='color: rgba(255,255,255,0.9); font-size: clamp(0.95rem, 2.2vw, 1.1rem); margin-top: 0.5rem;'>
-                        Université de Lomé • École Polytechnique
-                    </p>
-                    <div style='margin-top: 1rem;'>
-                        <span class='licence-badge animate-pulse'>Programme Licence</span>
-                    </div>
+            <div class='main-header animate-fade-in'>
+                <h1 style='margin: 0;'>Suivi Académique en Temps Réel</h1>
+                <p style='color: rgba(255,255,255,0.9); font-size: clamp(0.95rem, 2.2vw, 1.1rem); margin-top: 0.5rem;'>
+                    Université de Lomé • École Polytechnique
+                </p>
+                <div style='margin-top: 1rem;'>
+                    <span class='licence-badge animate-pulse'>Programme Licence</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
+        
         # SECTION RECHERCHE
         st.markdown("""
         <div class='search-box animate-fade-in'>
@@ -1869,21 +1859,3 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
