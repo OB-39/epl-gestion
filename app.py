@@ -1338,6 +1338,143 @@ elif selected in ["📊 Tableau de Bord", "📈 Stats Globales", "🚨 Alertes A
                 use_container_width=True,
                 hide_index=True
             )
+        # ----------------------------------------------------------------------------------
+# NOUVELLE SECTION : SUPER ADMIN
+# ----------------------------------------------------------------------------------
+        elif selected == "🛡️ Super Admin":
+            admin_header("Super Admin & Outils Avancés", "🛡️")
+
+            # 1. Onglets de Fonctionnalité
+        tab_etudiant, tab_export, tab_autres = st.tabs(["👨‍🎓 Gestion des Étudiants", "📥 Exporter les Données", "⚙️ Maintenance"])
+
+    # =========================================================
+    # 1.1. Onglet Gestion des Étudiants
+    # =========================================================
+        with tab_etudiant:
+            st.subheader("Ajouter un Nouvel Étudiant")
+            st.info("Utilisez les filières existantes (LT, GC, IABD, IS, GE, GM). L'ID doit être unique.")
+        
+        # Formulaire d'Ajout
+        with st.form("add_student_form"):
+            col_id, col_filiere = st.columns(2)
+            new_id = col_id.text_input("Matricule (ID Unique)", placeholder="Ex: LF-LT-019")
+            new_stream = col_filiere.selectbox("Filière", ["LT", "GC", "IABD", "IS", "GE", "GM"])
+            
+            col_nom, col_prenom = st.columns(2)
+            new_last_name = col_nom.text_input("Nom de Famille").upper()
+            new_first_name = col_prenom.text_input("Prénom")
+            
+            # Ajoutez ces champs pour compléter le schéma
+            new_phone = st.text_input("Téléphone (Optionnel)")
+            new_email = st.text_input("Email (Optionnel)")
+            
+            submitted = st.form_submit_button("➕ Enregistrer l'étudiant", type="primary")
+
+            if submitted:
+                if new_id and new_last_name and new_first_name and new_stream:
+                    # Ici, vous auriez besoin d'une nouvelle fonction Supabase pour l'insertion
+                    # Simulateur d'insertion (VOUS DEVREZ DÉFINIR CETTE FONCTION)
+                    # Example: insert_student(new_id, new_last_name, new_first_name, new_stream, new_phone, new_email)
+                    try:
+                        supabase.table('students').insert({
+                            "id": new_id,
+                            "last_name": new_last_name,
+                            "first_name": new_first_name,
+                            "stream": new_stream,
+                            "phone": new_phone,
+                            "email": new_email
+                        }).execute()
+                        st.success(f"✅ Étudiant {new_last_name} ajouté avec succès !")
+                        # Nettoyer le cache pour que le nouvel étudiant apparaisse dans l'appel
+                        st.cache_data.clear() 
+                    except Exception as e:
+                        st.error(f"❌ Erreur : Impossible d'ajouter l'étudiant. (Vérifiez si l'ID est unique). Détail : {e}")
+                else:
+                    st.warning("⚠️ Veuillez remplir le Matricule, Nom, Prénom et Filière.")
+
+        st.divider()
+        st.subheader("Rechercher et Modifier (À implémenter)")
+        st.markdown("*(Implémenter ici une recherche pour modifier la filière ou le nom d'un étudiant existant)*")
+        
+    # =========================================================
+    # 1.2. Onglet Exporter les Données
+    # =========================================================
+    with tab_export:
+        st.subheader("Téléchargement des Enregistrements")
+        st.info("Exportez les données brutes pour l'analyse ou l'archivage.")
+        
+        # Fonction utilitaire pour récupérer toutes les présences (Nécessite une jointure)
+        @st.cache_data(ttl=3600)
+        def get_all_attendance_export():
+            # Récupérer les données de présence avec les jointures nécessaires
+            try:
+                # Utiliser la jointure implicite via `select`
+                result = supabase.table('attendance')\
+                    .select("*, students(id, last_name, first_name, stream), sessions(date_time, courses(name))")\
+                    .execute()
+                
+                # Transformer en DataFrame Pandas
+                data = result.data
+                if not data:
+                    return pd.DataFrame()
+
+                # Aplatir la structure pour l'export CSV
+                export_data = []
+                for row in data:
+                    export_data.append({
+                        'session_id': row['session_id'],
+                        'student_id': row['students']['id'],
+                        'last_name': row['students']['last_name'],
+                        'first_name': row['students']['first_name'],
+                        'stream': row['students']['stream'],
+                        'course_name': row['sessions']['courses']['name'],
+                        'date_time': row['sessions']['date_time'],
+                        'status': row['status']
+                    })
+                
+                df_export = pd.DataFrame(export_data)
+                return df_export
+            except Exception as e:
+                st.error(f"Erreur d'exportation: {e}")
+                return pd.DataFrame()
+
+        df_export = get_all_attendance_export()
+
+        if df_export.empty:
+            st.warning("📭 Aucune donnée de présence à exporter.")
+        else:
+            st.markdown(f"** aperçu des {len(df_export)} enregistrements :**")
+            st.dataframe(df_export.head(), hide_index=True)
+            
+            csv = df_export.to_csv(index=False).encode('utf-8')
+            
+            st.download_button(
+                label="⬇️ Télécharger toutes les données de Présence (CSV)",
+                data=csv,
+                file_name=f'EPL_Attendance_Export_{datetime.now().strftime("%Y%m%d_%H%M")}.csv',
+                mime='text/csv',
+                use_container_width=True,
+                type="primary"
+            )
+
+    # =========================================================
+    # 1.3. Onglet Maintenance
+    # =========================================================
+    with tab_autres:
+        st.subheader("Outils de Maintenance")
+        st.markdown("#### 🔄 Gestion des Caches")
+        if st.button("Purger tous les Caches de Données", type="secondary", help="Force le rechargement de toutes les données Supabase (étudiants, cours, stats)."):
+            st.cache_data.clear()
+            st.success("✅ Caches purgés. Les prochaines requêtes rechargeront les données.")
+            time.sleep(1)
+            st.rerun()
+
+        st.markdown("#### 🔑 Gestion des Accès Délégués")
+        st.markdown("*(Implémenter ici l'affichage et la modification des mots de passe des délégués)*")
+        
+# ----------------------------------------------------------------------------------
+# FIN DE LA NOUVELLE LOGIQUE
+# ----------------------------------------------------------------------------------
 
 # =========================================================
 # 7. SCRIPT POUR DÉTECTION D'ÉCRAN (optionnel)
@@ -1368,6 +1505,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
