@@ -1350,13 +1350,7 @@ elif selected in ["📊 Tableau de Bord", "📈 Stats Globales", "🚨 Alertes A
 # ----------------------------------------------------------------------------------
 elif selected == "🛡️ Super Admin":
     admin_header("Super Admin & Outils Avancés", "🛡️")
-    
-    # Onglets de fonctionnalités
-    tab_etudiant, tab_export, tab_autres = st.tabs([
-        "👨‍🎓 Gestion des Étudiants", 
-        "📥 Exporter les Données", 
-        "⚙️ Maintenance"
-    ])
+    tab_etudiant, tab_export, tab_autres = st.tabs(["👨‍🎓 Gestion des Étudiants", "📥 Exporter les Données", "⚙️ Maintenance"])
     
     # =========================================================
     # 1.1. Onglet Gestion des Étudiants
@@ -1765,3 +1759,4 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
