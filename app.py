@@ -670,8 +670,8 @@ if 'selected_student' in st.session_state:
     </div>
     """, unsafe_allow_html=True)
             
-            # Chargement des statistiques
-            with st.spinner("Chargement de vos statistiques..."):
+     # Chargement des statistiques
+     with st.spinner("Chargement de vos statistiques..."):
                 stats = get_student_stats(student['id'])
                 
                 if stats:
@@ -1100,5 +1100,6 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
         elif selected == "Explorer les Données":
             st.title("🔎 Explorateur Brut")
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
 
