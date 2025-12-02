@@ -687,15 +687,17 @@ if not st.session_state['user_role']:
         # En-tête principal avec logo encadré
         col1, col2 = st.columns([1, 3])
         with col1:
-            st.markdown("""
-            <div class='logo-frame animate-fade-in'>
+            # URL de l'image (EPL Logo ou similaire)
+            img_url = "https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3"
+            st.markdown(f"""
+            <div class='logo-frame'>
                 <div class='logo-corner logo-corner-tl'></div>
                 <div class='logo-corner logo-corner-tr'></div>
                 <div class='logo-corner logo-corner-bl'></div>
                 <div class='logo-corner logo-corner-br'></div>
+                <img src="{img_url}" class="logo-img" width="120">
+            </div>
             """, unsafe_allow_html=True)
-            st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=120)
-            st.markdown("</div>", unsafe_allow_html=True)
             
         with col2:
             st.markdown("""
@@ -1324,3 +1326,4 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
         elif selected == "Explorer les Données":
             st.title("🔎 Explorateur Brut")
             st.dataframe(df, use_container_width=True, hide_index=True)
+
