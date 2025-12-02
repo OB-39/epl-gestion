@@ -796,7 +796,7 @@ if not st.session_state['user_role']:
             with search_col1:
                 search_query = st.text_input(
                     " ",
-                    placeholder="Ex: 12345 ou 'Koffi' ou 'Ama'...",
+                    placeholder="Ex: LF-LT-... ou 'Koffi' ou 'Ama'...",
                     label_visibility="collapsed",
                     key="main_search"
                 )
@@ -964,9 +964,9 @@ if not st.session_state['user_role']:
         
         cols_info = st.columns(3)
         features = [
-            ("📱", "Accès Mobile", "Consultez vos stats depuis votre smartphone", "#3B82F6"),
+            ("🚀", "Performance en Direct", "Taux de présence mis à jour après chaque appel enregistré par le staff.", "#3B82F6"),
             ("📈", "Statistiques Détaillées", "Visualisez vos progrès par matière", "#10B981"),
-            ("🔒", "Données Sécurisées", "Vos informations sont protégées", "#8B5CF6")
+            ("🔄", "Traçabilité Complète", "Visualisez l'historique précis de toutes vos sessions et sessions corrigées.", "#10B981")
         ]
         
         for idx, (icon, title, desc, color) in enumerate(features):
@@ -989,8 +989,8 @@ if not st.session_state['user_role']:
                     <img src="{LOGO_URL}" alt="Logo EPL">
                 </div>
                 <p style='color: #94a3b8; font-size: 0.85rem; margin: 0; line-height: 1.5;'>
-                    © 2024 École Polytechnique de Lomé<br>
-                    <span style='font-size: 0.8rem; color: #64748b;'>Portail Académique v2.0 • Responsive Design</span>
+                    © 2025 École Polytechnique de Lomé<br>
+                    <span style='font-size: 0.8rem; color: #64748b;'>Portail Académique v2.0 • created by OB</span>
                 </p>
             </div>
             """, unsafe_allow_html=True)
@@ -1018,15 +1018,7 @@ if not st.session_state['user_role']:
             
             # Carte de connexion
             with st.container():
-                st.markdown("""
-                <div style='
-                    background: linear-gradient(145deg, #1e293b, #0f172a);
-                    padding: clamp(1.2rem, 2.5vw, 2rem);
-                    border-radius: 20px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                    border: 1px solid #475569;
-                '>
-                """, unsafe_allow_html=True)
+                
                 
                 pwd = st.text_input("Mot de passe", type="password", key="login_password", 
                                    placeholder="Entrez le mot de passe d'accès")
@@ -1773,3 +1765,4 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
