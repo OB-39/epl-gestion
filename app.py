@@ -1611,45 +1611,45 @@ elif selected == "🛡️ Super Admin":
    # =========================================================
 # 1.3. Onglet Maintenance
 # =========================================================
-with tab_autres:
-    st.subheader("⚙️ Outils de Maintenance")
+    with tab_autres:
+        st.subheader("⚙️ Outils de Maintenance")
     
-    col_maint1, col_maint2 = st.columns(2)
+        col_maint1, col_maint2 = st.columns(2)
     
     # -----------------------------------------------------
     # COLONNE 1 : Caches & Statistiques BD
     # -----------------------------------------------------
-    with col_maint1:
-        st.markdown("#### 🔄 Gestion des Caches")
-        if st.button("🗑️ Purger tous les caches", 
-                     help="Force le rechargement de toutes les données depuis Supabase",
-                     use_container_width=True,
-                     type="secondary"):
-            st.cache_data.clear()
-            st.cache_resource.clear()
-            # Vider le cache de la fonction d'accès spécifique (si elle existe encore)
-            if 'get_all_user_credentials' in globals():
-                get_all_user_credentials.clear()
+        with col_maint1:
+            st.markdown("#### 🔄 Gestion des Caches")
+            if st.button("🗑️ Purger tous les caches", 
+                         help="Force le rechargement de toutes les données depuis Supabase",
+                         use_container_width=True,
+                         type="secondary"):
+                st.cache_data.clear()
+                st.cache_resource.clear()
+                # Vider le cache de la fonction d'accès spécifique (si elle existe encore)
+                if 'get_all_user_credentials' in globals():
+                    get_all_user_credentials.clear()
             
-            st.success("✅ Caches purgés. Les prochaines requêtes rechargeront les données.")
-            time.sleep(1)
-            st.rerun()
+                st.success("✅ Caches purgés. Les prochaines requêtes rechargeront les données.")
+                time.sleep(1)
+                st.rerun()
             
-        st.markdown("---")
+            st.markdown("---")
         
-        st.markdown("#### 📊 Statistiques Base de Données")
-        try:
-            # Les requêtes de comptage sont conservées
-            students_count = supabase.table('students').select("*", count="exact").execute().count
-            attendance_count = supabase.table('attendance').select("*", count="exact").execute().count
-            sessions_count = supabase.table('sessions').select("*", count="exact").execute().count
+            st.markdown("#### 📊 Statistiques Base de Données")
+            try:
+                # Les requêtes de comptage sont conservées
+                students_count = supabase.table('students').select("*", count="exact").execute().count
+                attendance_count = supabase.table('attendance').select("*", count="exact").execute().count
+                sessions_count = supabase.table('sessions').select("*", count="exact").execute().count
             
-            st.metric("👨‍🎓 Étudiants", students_count or 0)
-            st.metric("📋 Enregistrements de présence", attendance_count or 0)
-            st.metric("📅 Sessions de cours", sessions_count or 0)
+                st.metric("👨‍🎓 Étudiants", students_count or 0)
+                st.metric("📋 Enregistrements de présence", attendance_count or 0)
+                st.metric("📅 Sessions de cours", sessions_count or 0)
             
-        except Exception as e:
-            st.error(f"❌ Erreur de statistiques: {str(e)}")
+            except Exception as e:
+                st.error(f"❌ Erreur de statistiques: {str(e)}")
             
     # -----------------------------------------------------
     # COLONNE 2 : Gestion des Accès & Nettoyage
@@ -1759,4 +1759,5 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
