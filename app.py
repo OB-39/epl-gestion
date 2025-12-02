@@ -331,7 +331,7 @@ st.markdown("""
     /* === TEXTE === */
     p, li, .stMarkdown {
         color: var(--text-secondary) !important;
-        font-size: clamp(0.85rem, 1.8vw, 0.95rem) !important;
+        font-size: clamp(0.95rem, 2vw, 1,5rem) !important;
         line-height: 1.5 !important;
     }
     
@@ -1368,3 +1368,4 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
