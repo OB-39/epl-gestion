@@ -83,7 +83,7 @@ st.markdown("""
     }
     
     .logo-frame img {
-        width: clamp(90px, 18vw, 170px);
+        width: clamp(100px, 18vw, 170px);
         height: auto;
         object-fit: contain;
     }
@@ -1873,6 +1873,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
