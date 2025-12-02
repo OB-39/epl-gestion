@@ -1338,87 +1338,190 @@ elif selected in ["📊 Tableau de Bord", "📈 Stats Globales", "🚨 Alertes A
                 use_container_width=True,
                 hide_index=True
             )
-        # ----------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------------
 # NOUVELLE SECTION : SUPER ADMIN
 # ----------------------------------------------------------------------------------
-        elif selected == "🛡️ Super Admin":
-            admin_header("Super Admin & Outils Avancés", "🛡️")
-
-            # 1. Onglets de Fonctionnalité
-        tab_etudiant, tab_export, tab_autres = st.tabs(["👨‍🎓 Gestion des Étudiants", "📥 Exporter les Données", "⚙️ Maintenance"])
-
+elif selected == "🛡️ Super Admin":
+    admin_header("Super Admin & Outils Avancés", "🛡️")
+    
+    # Onglets de fonctionnalités
+    tab_etudiant, tab_export, tab_autres = st.tabs([
+        "👨‍🎓 Gestion des Étudiants", 
+        "📥 Exporter les Données", 
+        "⚙️ Maintenance"
+    ])
+    
     # =========================================================
     # 1.1. Onglet Gestion des Étudiants
     # =========================================================
-        with tab_etudiant:
-            st.subheader("Ajouter un Nouvel Étudiant")
-            st.info("Utilisez les filières existantes (LT, GC, IABD, IS, GE, GM). L'ID doit être unique.")
+    with tab_etudiant:
+        st.subheader("👤 Ajouter un Nouvel Étudiant")
+        st.info("Utilisez les filières existantes (LT, GC, IABD, IS, GE, GM). L'ID doit être unique.")
         
-        # Formulaire d'Ajout
-        with st.form("add_student_form"):
+        # Formulaire d'ajout
+        with st.form("add_student_form", clear_on_submit=True):
             col_id, col_filiere = st.columns(2)
-            new_id = col_id.text_input("Matricule (ID Unique)", placeholder="Ex: LF-LT-019")
-            new_stream = col_filiere.selectbox("Filière", ["LT", "GC", "IABD", "IS", "GE", "GM"])
+            new_id = col_id.text_input("Matricule (ID Unique)*", placeholder="Ex: LF-LT-019", help="Doit être unique")
+            new_stream = col_filiere.selectbox("Filière*", ["LT", "GC", "IABD", "IS", "GE", "GM"])
             
             col_nom, col_prenom = st.columns(2)
-            new_last_name = col_nom.text_input("Nom de Famille").upper()
-            new_first_name = col_prenom.text_input("Prénom")
+            new_last_name = col_nom.text_input("Nom de Famille*").upper()
+            new_first_name = col_prenom.text_input("Prénom*")
             
-            # Ajoutez ces champs pour compléter le schéma
-            new_phone = st.text_input("Téléphone (Optionnel)")
-            new_email = st.text_input("Email (Optionnel)")
+            # Champs optionnels
+            col_phone, col_email = st.columns(2)
+            new_phone = col_phone.text_input("📞 Téléphone (Optionnel)")
+            new_email = col_email.text_input("📧 Email (Optionnel)")
             
-            submitted = st.form_submit_button("➕ Enregistrer l'étudiant", type="primary")
-
+            col_submit1, col_submit2 = st.columns([1, 2])
+            with col_submit2:
+                submitted = st.form_submit_button("➕ Enregistrer l'étudiant", type="primary", use_container_width=True)
+            
             if submitted:
                 if new_id and new_last_name and new_first_name and new_stream:
-                    # Ici, vous auriez besoin d'une nouvelle fonction Supabase pour l'insertion
-                    # Simulateur d'insertion (VOUS DEVREZ DÉFINIR CETTE FONCTION)
-                    # Example: insert_student(new_id, new_last_name, new_first_name, new_stream, new_phone, new_email)
-                    try:
-                        supabase.table('students').insert({
-                            "id": new_id,
-                            "last_name": new_last_name,
-                            "first_name": new_first_name,
-                            "stream": new_stream,
-                            "phone": new_phone,
-                            "email": new_email
-                        }).execute()
-                        st.success(f"✅ Étudiant {new_last_name} ajouté avec succès !")
-                        # Nettoyer le cache pour que le nouvel étudiant apparaisse dans l'appel
-                        st.cache_data.clear() 
-                    except Exception as e:
-                        st.error(f"❌ Erreur : Impossible d'ajouter l'étudiant. (Vérifiez si l'ID est unique). Détail : {e}")
+                    # Vérifier si l'ID existe déjà
+                    existing_student = supabase.table('students')\
+                        .select("id")\
+                        .eq('id', new_id)\
+                        .execute()
+                    
+                    if existing_student.data:
+                        st.error(f"❌ L'ID '{new_id}' existe déjà. Veuillez en choisir un autre.")
+                    else:
+                        try:
+                            # Préparer les données
+                            student_data = {
+                                "id": new_id,
+                                "last_name": new_last_name,
+                                "first_name": new_first_name,
+                                "stream": new_stream
+                            }
+                            
+                            # Ajouter les champs optionnels s'ils sont remplis
+                            if new_phone:
+                                student_data["phone"] = new_phone
+                            if new_email:
+                                student_data["email"] = new_email
+                            
+                            # Insertion dans Supabase
+                            response = supabase.table('students').insert(student_data).execute()
+                            
+                            if response.data:
+                                st.success(f"✅ Étudiant {new_last_name} {new_first_name} ajouté avec succès !")
+                                st.balloons()
+                                # Nettoyer le cache pour que le nouvel étudiant apparaisse dans l'appel
+                                st.cache_data.clear()
+                                time.sleep(2)
+                                st.rerun()
+                            else:
+                                st.error("❌ Erreur lors de l'ajout de l'étudiant.")
+                                
+                        except Exception as e:
+                            st.error(f"❌ Erreur technique : {str(e)}")
                 else:
-                    st.warning("⚠️ Veuillez remplir le Matricule, Nom, Prénom et Filière.")
-
-        st.divider()
-        st.subheader("Rechercher et Modifier (À implémenter)")
-        st.markdown("*(Implémenter ici une recherche pour modifier la filière ou le nom d'un étudiant existant)*")
+                    st.warning("⚠️ Veuillez remplir tous les champs obligatoires (*).")
         
+        st.divider()
+        
+        # Rechercher et modifier un étudiant
+        st.subheader("🔍 Rechercher et Modifier un Étudiant")
+        
+        col_search, col_action = st.columns([3, 1])
+        with col_search:
+            search_term = st.text_input("Rechercher par ID, nom ou prénom", 
+                                       placeholder="Entrez un ID, nom ou prénom...",
+                                       key="student_search")
+        
+        if search_term:
+            try:
+                # Recherche dans la base de données
+                search_results = supabase.table('students')\
+                    .select("*")\
+                    .or_(f"id.ilike.%{search_term}%,last_name.ilike.%{search_term}%,first_name.ilike.%{search_term}%")\
+                    .limit(10)\
+                    .execute()
+                
+                if search_results.data:
+                    students_df = pd.DataFrame(search_results.data)
+                    
+                    st.markdown(f"**📋 {len(search_results.data)} résultat(s) trouvé(s)**")
+                    
+                    # Afficher les résultats dans un data editor
+                    edited_df = st.data_editor(
+                        students_df[['id', 'last_name', 'first_name', 'stream', 'phone', 'email']],
+                        column_config={
+                            "id": st.column_config.TextColumn("Matricule", disabled=True),
+                            "last_name": st.column_config.TextColumn("Nom"),
+                            "first_name": st.column_config.TextColumn("Prénom"),
+                            "stream": st.column_config.SelectboxColumn(
+                                "Filière",
+                                options=["LT", "GC", "IABD", "IS", "GE", "GM"]
+                            ),
+                            "phone": st.column_config.TextColumn("Téléphone"),
+                            "email": st.column_config.TextColumn("Email")
+                        },
+                        use_container_width=True,
+                        hide_index=True,
+                        num_rows="dynamic",
+                        key="student_editor"
+                    )
+                    
+                    if st.button("💾 Enregistrer les modifications", type="primary", use_container_width=True):
+                        try:
+                            # Mettre à jour chaque étudiant modifié
+                            for index, row in edited_df.iterrows():
+                                supabase.table('students')\
+                                    .update({
+                                        'last_name': row['last_name'],
+                                        'first_name': row['first_name'],
+                                        'stream': row['stream'],
+                                        'phone': row['phone'] if pd.notna(row['phone']) else None,
+                                        'email': row['email'] if pd.notna(row['email']) else None
+                                    })\
+                                    .eq('id', row['id'])\
+                                    .execute()
+                            
+                            st.success("✅ Modifications enregistrées avec succès !")
+                            st.cache_data.clear()
+                            time.sleep(1)
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"❌ Erreur lors de la mise à jour : {str(e)}")
+                            
+                else:
+                    st.info("ℹ️ Aucun étudiant trouvé avec ce critère de recherche.")
+                    
+            except Exception as e:
+                st.error(f"❌ Erreur de recherche : {str(e)}")
+    
     # =========================================================
     # 1.2. Onglet Exporter les Données
     # =========================================================
     with tab_export:
-        st.subheader("Téléchargement des Enregistrements")
+        st.subheader("📊 Téléchargement des Enregistrements")
         st.info("Exportez les données brutes pour l'analyse ou l'archivage.")
         
-        # Fonction utilitaire pour récupérer toutes les présences (Nécessite une jointure)
+        # Options d'export
+        export_type = st.radio(
+            "Type d'exportation :",
+            ["📋 Toutes les présences", "👨‍🎓 Liste des étudiants", "📚 Liste des cours"],
+            horizontal=True
+        )
+        
+        # Fonction pour récupérer toutes les présences avec jointures
         @st.cache_data(ttl=3600)
         def get_all_attendance_export():
-            # Récupérer les données de présence avec les jointures nécessaires
             try:
-                # Utiliser la jointure implicite via `select`
                 result = supabase.table('attendance')\
                     .select("*, students(id, last_name, first_name, stream), sessions(date_time, courses(name))")\
                     .execute()
                 
-                # Transformer en DataFrame Pandas
                 data = result.data
                 if not data:
                     return pd.DataFrame()
 
-                # Aplatir la structure pour l'export CSV
                 export_data = []
                 for row in data:
                     export_data.append({
@@ -1427,55 +1530,169 @@ elif selected in ["📊 Tableau de Bord", "📈 Stats Globales", "🚨 Alertes A
                         'last_name': row['students']['last_name'],
                         'first_name': row['students']['first_name'],
                         'stream': row['students']['stream'],
-                        'course_name': row['sessions']['courses']['name'],
-                        'date_time': row['sessions']['date_time'],
+                        'course_name': row['sessions']['courses']['name'] if row['sessions'] and row['sessions']['courses'] else 'Inconnu',
+                        'date_time': row['sessions']['date_time'] if row['sessions'] else 'Inconnu',
                         'status': row['status']
                     })
                 
-                df_export = pd.DataFrame(export_data)
-                return df_export
+                return pd.DataFrame(export_data)
             except Exception as e:
                 st.error(f"Erreur d'exportation: {e}")
                 return pd.DataFrame()
-
-        df_export = get_all_attendance_export()
+        
+        # Fonction pour récupérer la liste des étudiants
+        @st.cache_data(ttl=3600)
+        def get_all_students_export():
+            try:
+                result = supabase.table('students').select("*").execute()
+                return pd.DataFrame(result.data)
+            except Exception as e:
+                st.error(f"Erreur d'exportation étudiants: {e}")
+                return pd.DataFrame()
+        
+        # Fonction pour récupérer la liste des cours
+        @st.cache_data(ttl=3600)
+        def get_all_courses_export():
+            try:
+                result = supabase.table('courses').select("*").execute()
+                return pd.DataFrame(result.data)
+            except Exception as e:
+                st.error(f"Erreur d'exportation cours: {e}")
+                return pd.DataFrame()
+        
+        # Exécuter l'export selon le type sélectionné
+        if export_type == "📋 Toutes les présences":
+            df_export = get_all_attendance_export()
+            export_name = "presences"
+        elif export_type == "👨‍🎓 Liste des étudiants":
+            df_export = get_all_students_export()
+            export_name = "etudiants"
+        else:  # Liste des cours
+            df_export = get_all_courses_export()
+            export_name = "cours"
 
         if df_export.empty:
-            st.warning("📭 Aucune donnée de présence à exporter.")
+            st.warning(f"📭 Aucune donnée de {export_name} à exporter.")
         else:
-            st.markdown(f"** aperçu des {len(df_export)} enregistrements :**")
+            st.markdown(f"**Aperçu des {len(df_export)} enregistrements :**")
             st.dataframe(df_export.head(), hide_index=True)
             
-            csv = df_export.to_csv(index=False).encode('utf-8')
+            # Préparer le fichier CSV
+            csv = df_export.to_csv(index=False, encoding='utf-8-sig')
             
-            st.download_button(
-                label="⬇️ Télécharger toutes les données de Présence (CSV)",
-                data=csv,
-                file_name=f'EPL_Attendance_Export_{datetime.now().strftime("%Y%m%d_%H%M")}.csv',
-                mime='text/csv',
-                use_container_width=True,
-                type="primary"
-            )
-
+            current_time = datetime.now().strftime("%Y%m%d_%H%M")
+            
+            # Bouton de téléchargement
+            col_dl1, col_dl2, col_dl3 = st.columns([1, 2, 1])
+            with col_dl2:
+                st.download_button(
+                    label=f"⬇️ Télécharger ({len(df_export)} enregistrements)",
+                    data=csv,
+                    file_name=f'EPL_{export_name}_export_{current_time}.csv',
+                    mime='text/csv',
+                    use_container_width=True,
+                    type="primary",
+                    key=f"download_{export_name}"
+                )
+            
+            # Option d'export JSON
+            if st.checkbox("Exporter également en format JSON"):
+                json_data = df_export.to_json(orient='records', force_ascii=False, indent=2)
+                
+                st.download_button(
+                    label="⬇️ Télécharger en JSON",
+                    data=json_data,
+                    file_name=f'EPL_{export_name}_export_{current_time}.json',
+                    mime='application/json',
+                    use_container_width=True,
+                    type="secondary"
+                )
+    
     # =========================================================
     # 1.3. Onglet Maintenance
     # =========================================================
     with tab_autres:
-        st.subheader("Outils de Maintenance")
-        st.markdown("#### 🔄 Gestion des Caches")
-        if st.button("Purger tous les Caches de Données", type="secondary", help="Force le rechargement de toutes les données Supabase (étudiants, cours, stats)."):
-            st.cache_data.clear()
-            st.success("✅ Caches purgés. Les prochaines requêtes rechargeront les données.")
-            time.sleep(1)
-            st.rerun()
-
-        st.markdown("#### 🔑 Gestion des Accès Délégués")
-        st.markdown("*(Implémenter ici l'affichage et la modification des mots de passe des délégués)*")
+        st.subheader("⚙️ Outils de Maintenance")
         
-# ----------------------------------------------------------------------------------
-# FIN DE LA NOUVELLE LOGIQUE
-# ----------------------------------------------------------------------------------
+        col_maint1, col_maint2 = st.columns(2)
+        
+        with col_maint1:
+            st.markdown("#### 🔄 Gestion des Caches")
+            if st.button("🗑️ Purger tous les caches", 
+                        help="Force le rechargement de toutes les données depuis Supabase",
+                        use_container_width=True,
+                        type="secondary"):
+                st.cache_data.clear()
+                st.cache_resource.clear()
+                st.success("✅ Caches purgés. Les prochaines requêtes rechargeront les données.")
+                time.sleep(1)
+                st.rerun()
+            
+            st.markdown("---")
+            
+            st.markdown("#### 📊 Statistiques Base de Données")
+            try:
+                # Compter les étudiants
+                students_count = supabase.table('students').select("*", count="exact").execute().count
+                # Compter les présences
+                attendance_count = supabase.table('attendance').select("*", count="exact").execute().count
+                # Compter les sessions
+                sessions_count = supabase.table('sessions').select("*", count="exact").execute().count
+                
+                st.metric("👨‍🎓 Étudiants", students_count or 0)
+                st.metric("📋 Enregistrements de présence", attendance_count or 0)
+                st.metric("📅 Sessions de cours", sessions_count or 0)
+                
+            except Exception as e:
+                st.error(f"❌ Erreur de statistiques: {str(e)}")
+        
+        with col_maint2:
+            st.markdown("#### 🔑 Gestion des Accès")
+            
+            st.info("Mots de passe des délégués (lecture seule) :")
+            
+            # Afficher les mots de passe des délégués (sécurisé - en lecture seule)
+            delegates_data = []
+            for pass_key, stream in CREDENTIALS["DELEGATES"].items():
+                delegates_data.append({
+                    "Filière": stream,
+                    "Mot de passe": pass_key,
+                    "Rôle": "Délégué"
+                })
+            
+            if delegates_data:
+                delegates_df = pd.DataFrame(delegates_data)
+                st.dataframe(
+                    delegates_df,
+                    column_config={
+                        "Mot de passe": st.column_config.TextColumn(
+                            "Mot de passe",
+                            help="Mot de passe d'accès pour les délégués"
+                        )
+                    },
+                    use_container_width=True,
+                    hide_index=True
+                )
+            else:
+                st.warning("Aucun délégué configuré.")
+            
+            st.markdown("---")
+            
+            st.markdown("#### 🧹 Nettoyage des Données")
+            st.warning("⚠️ Actions irréversibles")
+            
+            # Option pour supprimer les données de test
+            if st.button("🧪 Supprimer données de test", 
+                        help="À utiliser avec précaution !",
+                        use_container_width=True,
+                        type="secondary",
+                        disabled=True):  # Désactivé par sécurité
+                st.info("Cette fonctionnalité est désactivée pour des raisons de sécurité.")
 
+# ----------------------------------------------------------------------------------
+# FIN DE LA SECTION SUPER ADMIN
+# ----------------------------------------------------------------------------------
+     
 # =========================================================
 # 7. SCRIPT POUR DÉTECTION D'ÉCRAN (optionnel)
 # =========================================================
@@ -1505,6 +1722,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
