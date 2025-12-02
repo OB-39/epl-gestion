@@ -582,7 +582,7 @@ if not st.session_state['user_role']:
         # En-tête principal
         col1, col2 = st.columns([1, 3])
         with col1:
-            st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=120)
+            st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=120)
         with col2:
             st.markdown("""
             <div class='main-header'>
@@ -641,33 +641,34 @@ if not st.session_state['user_role']:
                             st.session_state['selected_student'] = student
         
         # Affichage du profil étudiant
-        if 'selected_student' in st.session_state:
-            student = st.session_state['selected_student']
-            
-            st.markdown("---")
-            st.markdown(f"""
-            <div class='student-profile'>
-                <h2>👤 Profil Étudiant</h2>
-                <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;'>
-                    <div class='metric-card'>
-                        <h4>Nom Complet</h4>
-                        <p style='font-size: 1.3rem; font-weight: bold;'>{student['last_name']} {student['first_name']}</p>
-                    </div>
-                    <div class='metric-card'>
-                        <h4>Matricule</h4>
-                        <p style='font-size: 1.3rem; font-weight: bold;'>{student.get('student_id', 'N/A')}</p>
-                    </div>
-                    <div class='metric-card'>
-                        <h4>Filière</h4>
-                        <p style='font-size: 1.3rem; font-weight: bold; color: #3B82F6;'>{student['stream']}</p>
-                    </div>
-                    <div class='metric-card'>
-                        <h4>Niveau</h4>
-                        <p style='font-size: 1.3rem; font-weight: bold;'>Master</p>
-                    </div>
-                </div>
+       # Affichage du profil étudiant
+if 'selected_student' in st.session_state:
+    student = st.session_state['selected_student']
+    
+    st.markdown("---")
+    st.markdown(f"""
+    <div class='student-profile'>
+        <h2>👤 Profil Étudiant</h2>
+        <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;'>
+            <div class='metric-card'>
+                <h4>Nom Complet</h4>
+                <p style='font-size: 1.3rem; font-weight: bold;'>{student['last_name']} {student['first_name']}</p>
             </div>
-            """, unsafe_allow_html=True)
+            <div class='metric-card'>
+                <h4>Matricule (ID)</h4>
+                <p style='font-size: 1.3rem; font-weight: bold; color: #3B82F6;'>{student['id']}</p>
+            </div>
+            <div class='metric-card'>
+                <h4>Filière</h4>
+                <p style='font-size: 1.3rem; font-weight: bold; color: #10B981;'>{student['stream']}</p>
+            </div>
+            <div class='metric-card'>
+                <h4>Niveau</h4>
+                <p style='font-size: 1.3rem; font-weight: bold; color: #8B5CF6;'>Licence</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
             
             # Chargement des statistiques
             with st.spinner("Chargement de vos statistiques..."):
@@ -1099,4 +1100,5 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
         elif selected == "Explorer les Données":
             st.title("🔎 Explorateur Brut")
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
