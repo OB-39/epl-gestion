@@ -7,17 +7,79 @@ from streamlit_option_menu import option_menu
 import altair as alt
 
 # --- 1. CONFIGURATION ET SÉCURITÉ ---
-st.set_page_config(page_title="EPL - Master Panel", page_icon="🛡️", layout="wide")
+st.set_page_config(
+    page_title="EPL - Master Panel", 
+    page_icon="🛡️", 
+    layout="wide",
+    initial_sidebar_state="auto"
+)
 
 # --- CSS MODERNE ---
 st.markdown("""
 <style>
-    .metric-card { background-color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
-    .stButton>button { border-radius: 8px; font-weight: bold; }
+    .main-header {
+        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .home-card {
+        background-color: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin: 1rem 0;
+        transition: transform 0.3s ease;
+    }
+    .home-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+    .metric-card { 
+        background-color: white; 
+        padding: 20px; 
+        border-radius: 10px; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        text-align: center; 
+        border-left: 5px solid #1E3A8A;
+    }
+    .student-profile {
+        background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid #e0e7ff;
+    }
+    .highlight-stat {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1E3A8A;
+        text-align: center;
+    }
+    .search-box {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+    }
+    .stButton>button { 
+        border-radius: 8px; 
+        font-weight: bold; 
+        padding: 0.5rem 2rem;
+    }
     h1, h2, h3 { color: #1E3A8A; }
     div[data-testid="stMetricValue"] { color: #1E3A8A; font-size: 24px; }
     /* Amélioration visuelle des tableaux */
     .stDataFrame { border-radius: 10px; overflow: hidden; }
+    .sidebar-content {
+        padding: 1rem;
+    }
+    /* Style pour la barre de progression */
+    .stProgress > div > div > div > div {
+        background-color: #1E3A8A;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -69,6 +131,91 @@ def login(password):
         st.session_state['user_scope'] = CREDENTIALS["DELEGATES"][password]
         return True
     return False
+
+# --- FONCTIONS POUR PAGE PUBLIQUE ---
+
+@st.cache_data(ttl=600)
+def search_student(identifier):
+    """
+    Recherche un étudiant par:
+    - Matricule exact
+    - Nom/prénom (recherche partielle insensible à la casse)
+    """
+    try:
+        # Vérifier si c'est un matricule (supposé numérique)
+        if identifier.isdigit():
+            # Recherche par matricule exact
+            result = supabase.table('students')\
+                .select("*")\
+                .eq('student_id', identifier)\
+                .execute()
+        else:
+            # Recherche par nom/prénom (insensible à la casse)
+            result = supabase.table('students')\
+                .select("*")\
+                .or_(f"last_name.ilike.%{identifier}%,first_name.ilike.%{identifier}%")\
+                .limit(10)\
+                .execute()
+        
+        return result.data if result.data else []
+    except Exception as e:
+        st.error(f"Erreur lors de la recherche: {e}")
+        return []
+
+@st.cache_data(ttl=300)
+def get_student_stats(student_id):
+    """
+    Récupère les statistiques d'un étudiant spécifique
+    """
+    try:
+        # Requête pour obtenir les stats de présence
+        stats = supabase.table('attendance')\
+            .select("status, sessions(date_time, courses(name, stream_target))")\
+            .eq('student_id', student_id)\
+            .execute()
+        
+        return process_student_stats(stats.data) if stats.data else None
+    except Exception as e:
+        st.error(f"Erreur lors du chargement des stats: {e}")
+        return None
+
+def process_student_stats(attendance_data):
+    """
+    Traite les données brutes pour calculer les statistiques
+    """
+    if not attendance_data:
+        return None
+    
+    # Initialisation des compteurs
+    total_sessions = len(attendance_data)
+    present_count = sum(1 for item in attendance_data if item['status'] == 'PRESENT')
+    absent_count = total_sessions - present_count
+    
+    # Calcul du pourcentage
+    attendance_percentage = (present_count / total_sessions * 100) if total_sessions > 0 else 0
+    
+    # Groupement par matière
+    courses_stats = {}
+    for item in attendance_data:
+        course = item.get('sessions', {}).get('courses', {})
+        if course:
+            course_name = course.get('name', 'Inconnu')
+            if course_name not in courses_stats:
+                courses_stats[course_name] = {'present': 0, 'total': 0}
+            
+            courses_stats[course_name]['total'] += 1
+            if item['status'] == 'PRESENT':
+                courses_stats[course_name]['present'] += 1
+    
+    # Préparation des données retour
+    return {
+        'total_sessions': total_sessions,
+        'present_count': present_count,
+        'absent_count': absent_count,
+        'attendance_percentage': round(attendance_percentage, 1),
+        'courses_stats': courses_stats,
+        'last_updated': datetime.now().strftime("%d/%m/%Y %H:%M")
+    }
 
 # -- Lectures de données (avec Cache pour performance) --
 
@@ -198,24 +345,290 @@ def get_global_stats():
 
 get_session_state()
 
-# 1. LOGIN SCREEN
+# --- PAGE D'ACCUEIL PUBLIQUE (si non connecté) ---
 if not st.session_state['user_role']:
-    col1, col2, col3 = st.columns([1,1,1])
-    with col2:
-        st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=150)
-        st.markdown("<h3 style='text-align: center;'>Portail Sécurisé EPL</h3>", unsafe_allow_html=True)
-        pwd = st.text_input("Mot de passe d'accès", type="password")
-        if st.button("Connexion", use_container_width=True):
-            if login(pwd):
-                st.success(f"Bienvenue, accès {st.session_state['user_role']}")
-                time.sleep(0.5)
+    # Option pour la page publique ou login
+    if 'show_login' not in st.session_state:
+        st.session_state['show_login'] = False
+    
+    if not st.session_state['show_login']:
+        # ============ PAGE D'ACCUEIL PUBLIQUE ============
+        
+        # En-tête principal
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=120)
+        with col2:
+            st.markdown("""
+            <div class='main-header'>
+                <h1 style='color: white; margin: 0;'>📊 Portail de Suivi Académique EPL</h1>
+                <p style='color: rgba(255,255,255,0.9); font-size: 1.2rem; margin-top: 0.5rem;'>
+                    Université de Lomé - École Polytechnique
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Section de recherche
+        st.markdown("""
+        <div class='search-box'>
+            <h2 style='color: #1E3A8A;'>🔍 Consultez vos statistiques de présence</h2>
+            <p style='color: #666;'>Recherchez votre profil en entrant votre matricule, nom ou prénom</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Barre de recherche
+        search_col1, search_col2 = st.columns([4, 1])
+        with search_col1:
+            search_query = st.text_input(
+                "Recherche",
+                placeholder="Ex: 2023001 ou 'Koffi' ou 'Ama'...",
+                label_visibility="collapsed"
+            )
+        with search_col2:
+            search_button = st.button("Rechercher", use_container_width=True, type="primary")
+        
+        # Résultats de recherche
+        if search_query and search_button:
+            with st.spinner("Recherche en cours..."):
+                results = search_student(search_query)
+                
+                if results:
+                    if len(results) == 1:
+                        # Affichage direct du profil unique
+                        student = results[0]
+                        st.session_state['selected_student'] = student
+                    else:
+                        # Sélection parmi plusieurs résultats
+                        st.markdown(f"**{len(results)} résultats trouvés**")
+                        
+                        options = [f"{s['last_name']} {s['first_name']} - {s.get('student_id', 'N/A')} ({s['stream']})" 
+                                  for s in results]
+                        
+                        selected_option = st.selectbox(
+                            "Sélectionnez votre profil:",
+                            options,
+                            index=0
+                        )
+                        
+                        if st.button("Voir les statistiques", type="primary"):
+                            selected_index = options.index(selected_option)
+                            student = results[selected_index]
+                            st.session_state['selected_student'] = student
+        
+        # Affichage du profil étudiant
+        if 'selected_student' in st.session_state:
+            student = st.session_state['selected_student']
+            
+            st.markdown("---")
+            st.markdown(f"""
+            <div class='student-profile'>
+                <h2>👤 Profil Étudiant</h2>
+                <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;'>
+                    <div class='metric-card'>
+                        <h4>Nom Complet</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold;'>{student['last_name']} {student['first_name']}</p>
+                    </div>
+                    <div class='metric-card'>
+                        <h4>Matricule</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold;'>{student.get('student_id', 'N/A')}</p>
+                    </div>
+                    <div class='metric-card'>
+                        <h4>Filière</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold; color: #3B82F6;'>{student['stream']}</p>
+                    </div>
+                    <div class='metric-card'>
+                        <h4>Niveau</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold;'>Master</p>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Chargement des statistiques
+            with st.spinner("Chargement de vos statistiques..."):
+                stats = get_student_stats(student['id'])
+                
+                if stats:
+                    # Section statistiques principales
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        st.markdown(f"""
+                        <div class='metric-card'>
+                            <h4>Taux de Présence</h4>
+                            <div class='highlight-stat'>{stats['attendance_percentage']}%</div>
+                            <progress value="{stats['attendance_percentage']}" max="100" style="width: 100%; height: 10px;"></progress>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col2:
+                        st.markdown(f"""
+                        <div class='metric-card'>
+                            <h4>Séances totales</h4>
+                            <div class='highlight-stat'>{stats['total_sessions']}</div>
+                            <p style='color: #666;'>Sessions enregistrées</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col3:
+                        st.markdown(f"""
+                        <div class='metric-card'>
+                            <h4>Présences</h4>
+                            <div class='highlight-stat' style='color: #10B981;'>{stats['present_count']}</div>
+                            <p style='color: #666;'>Séances suivies</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col4:
+                        st.markdown(f"""
+                        <div class='metric-card'>
+                            <h4>Absences</h4>
+                            <div class='highlight-stat' style='color: #EF4444;'>{stats['absent_count']}</div>
+                            <p style='color: #666;'>Séances manquées</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Statistiques par matière
+                    if stats['courses_stats']:
+                        st.markdown("### 📚 Détail par matière")
+                        
+                        courses_df = []
+                        for course_name, course_stats in stats['courses_stats'].items():
+                            course_percentage = (course_stats['present'] / course_stats['total'] * 100) if course_stats['total'] > 0 else 0
+                            courses_df.append({
+                                'Matière': course_name,
+                                'Séances': course_stats['total'],
+                                'Présences': course_stats['present'],
+                                'Taux': f"{round(course_percentage, 1)}%"
+                            })
+                        
+                        courses_data = pd.DataFrame(courses_df)
+                        
+                        # Affichage sous forme de graphique et tableau
+                        tab1, tab2 = st.tabs(["📈 Visualisation", "📋 Détails"])
+                        
+                        with tab1:
+                            # Graphique des taux par matière
+                            chart_data = pd.DataFrame(courses_df)
+                            chart_data['Taux_num'] = chart_data['Taux'].str.replace('%', '').astype(float)
+                            
+                            chart = alt.Chart(chart_data).mark_bar().encode(
+                                x=alt.X('Matière', sort='-y'),
+                                y=alt.Y('Taux_num', title='Taux de présence (%)'),
+                                color=alt.Color('Taux_num', scale=alt.Scale(scheme='blues')),
+                                tooltip=['Matière', 'Taux', 'Séances', 'Présences']
+                            ).properties(height=300)
+                            
+                            st.altair_chart(chart, use_container_width=True)
+                        
+                        with tab2:
+                            st.dataframe(
+                                courses_data,
+                                column_config={
+                                    "Taux": st.column_config.ProgressColumn(
+                                        "Taux",
+                                        format="%s",
+                                        min_value=0,
+                                        max_value=100
+                                    )
+                                },
+                                use_container_width=True,
+                                hide_index=True
+                            )
+                    
+                    # Dernière mise à jour
+                    st.caption(f"🔄 Dernière mise à jour: {stats['last_updated']}")
+                    
+                    # Bouton pour nouvelle recherche
+                    if st.button("🔁 Nouvelle recherche", type="secondary"):
+                        del st.session_state['selected_student']
+                        st.rerun()
+                    
+                else:
+                    st.info("📊 Aucune statistique disponible pour cet étudiant pour le moment.")
+        
+        # Section informative
+        st.markdown("---")
+        
+        col_info1, col_info2, col_info3 = st.columns(3)
+        
+        with col_info1:
+            st.markdown("""
+            <div class='home-card'>
+                <h3>🎯 Objectif du Portail</h3>
+                <p>Suivez votre assiduité et progressez dans votre parcours académique en toute transparence.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_info2:
+            st.markdown("""
+            <div class='home-card'>
+                <h3>📈 Avantages</h3>
+                <ul style='padding-left: 20px;'>
+                    <li>Statistiques en temps réel</li>
+                    <li>Détail par matière</li>
+                    <li>Accès 24h/24</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_info3:
+            st.markdown("""
+            <div class='home-card'>
+                <h3>🔐 Accès Staff</h3>
+                <p>Les enseignants et délégués peuvent accéder au panel d'administration.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Bouton accès administration
+        st.markdown("---")
+        col_admin = st.columns([3, 1, 3])
+        with col_admin[1]:
+            if st.button("🔑 Accès Administration", use_container_width=True, type="secondary"):
+                st.session_state['show_login'] = True
                 st.rerun()
-            else:
-                st.error("Accès Refusé.")
+    
+    else:
+        # ============ FORMULAIRE DE LOGIN ============
+        st.markdown("<div style='height: 100px'></div>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            st.markdown("<h2 style='text-align: center;'>Connexion Administration</h2>", unsafe_allow_html=True)
+            
+            login_card = st.container()
+            with login_card:
+                st.markdown("""
+                <div style='background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);'>
+                """, unsafe_allow_html=True)
+                
+                pwd = st.text_input("Mot de passe d'accès", type="password")
+                
+                col_btn1, col_btn2, col_btn3 = st.columns([1,2,1])
+                with col_btn2:
+                    if st.button("Se connecter", use_container_width=True, type="primary"):
+                        if login(pwd):
+                            st.success("Connexion réussie !")
+                            time.sleep(0.5)
+                            st.rerun()
+                        else:
+                            st.error("Accès refusé. Vérifiez vos identifiants.")
+                
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            if st.button("← Retour à l'accueil public", type="secondary"):
+                st.session_state['show_login'] = False
+                if 'selected_student' in st.session_state:
+                    del st.session_state['selected_student']
+                st.rerun()
+    
     st.stop()
 
-# 2. LOGGED IN INTERFACE
+# =========================================================
+# INTERFACE CONNECTÉE (RESTE DU CODE EXISTANT)
+# =========================================================
+
 with st.sidebar:
+    st.markdown("<div class='sidebar-content'>", unsafe_allow_html=True)
     st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=80)
     st.markdown(f"**Rôle :** {st.session_state['user_role']}")
     if st.session_state['user_scope'] != 'ALL':
@@ -241,7 +654,10 @@ with st.sidebar:
     if selected == "Déconnexion":
         st.session_state['user_role'] = None
         st.session_state['user_scope'] = None
+        st.session_state['show_login'] = False
         st.rerun()
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # --- PAGE: FAIRE L'APPEL ---
 if selected == "Faire l'Appel" or (selected == "Faire l'Appel (Force)" and st.session_state['user_role'] == 'ADMIN'):
@@ -437,24 +853,4 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
             red_list = df[df['attendance_percentage'] < 50].sort_values('attendance_percentage')
             
             if red_list.empty:
-                st.success("Aucun étudiant en dessous de 50%.")
-            else:
-                st.error(f"{len(red_list)} étudiants nécessitent une attention particulière.")
-                
-                st.dataframe(
-                    red_list[['first_name', 'last_name', 'stream', 'attendance_percentage', 'absent_count']],
-                    column_config={
-                        "attendance_percentage": st.column_config.ProgressColumn("Taux", format="%.1f%%", min_value=0, max_value=100),
-                        "absent_count": st.column_config.NumberColumn("Absences Total"),
-                    },
-                    use_container_width=True,
-                    hide_index=True
-                )
-                
-                if st.button("Copier la liste pour email"):
-                    st.toast("Liste copiée (simulation)", icon="📧")
-
-        # --- SOUS-PAGE : EXPLORATEUR ---
-        elif selected == "Explorer les Données":
-            st.title("🔎 Explorateur Brut")
-            st.dataframe(df, use_container_width=True, hide_index=True)
+                st.success("Aucun étudiant en dess
