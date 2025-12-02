@@ -561,6 +561,7 @@ def login(password):
 
 @st.cache_data(ttl=30)
 def get_all_user_credentials():
+    """Charge TOUS les identifiants (Staff et Délégués) depuis la table Supabase."""
     try:
         # Récupère l'ID (scope), le rôle et le mot de passe
         result = supabase.table('delegate_access').select("id, role, password").execute()
@@ -751,38 +752,35 @@ if not st.session_state['user_role']:
         
         st.markdown("</div></div>", unsafe_allow_html=True)
         
-       # CONTENU PRINCIPAL
-    st.markdown('<div class="main-container">', unsafe_allow_html=True)
+        # CONTENU PRINCIPAL
+        st.markdown('<div class="main-container">', unsafe_allow_html=True)
         
-# EN-TÊTE
-col1, col2 = st.columns([1, 2])
-with col1:
-    st.markdown(f"""
-    <div class="logo-frame animate-fade-in">
-        <div class='logo-corner logo-corner-tl'></div>
-        <div class='logo-corner logo-corner-tr'></div>
-        <div class='logo-corner logo-corner-bl'></div>
-        <div class='logo-corner logo-corner-br'></div>
-        <img src="{LOGO_URL}" alt="Logo EPL">
-    </div>
-    """, unsafe_allow_html=True)
-    
-with col2:
-    st.markdown("""
-    <div class='main-header animate-fade-in'>
-        <h1 style='margin: 0;'>Portail d'Assiduité Académique EPL</h1>
-        <p style='color: rgba(255,255,255,0.9); font-size: clamp(0.95rem, 2.2vw, 1.1rem); margin-top: 0.5rem;'>
-            Université de Lomé • École Polytechnique (EPL)
-        </p>
-        <div style='margin-top: 1rem;'>
-            <span class='licence-badge animate-pulse'>Licence Fondamentale (L2)</span>
-        </div>
-        <p style='color: var(--text-secondary); font-size: clamp(0.8rem, 1.5vw, 0.9rem); margin-top: 0.5rem;'>
-            Accédez à vos statistiques de présence par filière et par matière.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
+        # EN-TÊTE
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st.markdown(f"""
+            <div class="logo-frame animate-fade-in">
+                <div class='logo-corner logo-corner-tl'></div>
+                <div class='logo-corner logo-corner-tr'></div>
+                <div class='logo-corner logo-corner-bl'></div>
+                <div class='logo-corner logo-corner-br'></div>
+                <img src="{LOGO_URL}" alt="Logo EPL">
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col2:
+            st.markdown("""
+            <div class='main-header animate-fade-in'>
+                <h1 style='margin: 0;'>Suivi Académique en Temps Réel</h1>
+                <p style='color: rgba(255,255,255,0.9); font-size: clamp(0.95rem, 2.2vw, 1.1rem); margin-top: 0.5rem;'>
+                    Université de Lomé • École Polytechnique
+                </p>
+                <div style='margin-top: 1rem;'>
+                    <span class='licence-badge animate-pulse'>Programme Licence</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         # SECTION RECHERCHE
         st.markdown("""
         <div class='search-box animate-fade-in'>
@@ -1767,6 +1765,3 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
-
-
-
