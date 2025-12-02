@@ -331,8 +331,8 @@ st.markdown("""
     /* === TEXTE === */
     p, li, .stMarkdown {
         color: var(--text-secondary) !important;
-        font-size: clamp(0.95rem, 2vw, 1,5rem) !important;
-        line-height: 1.5 !important;
+        font-size: clamp(1rem, 3vw, 2rem) !important;
+        line-height: 1.7 !important;
     }
     
     /* === GRID RESPONSIVE === */
@@ -1368,4 +1368,5 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
