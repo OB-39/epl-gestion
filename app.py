@@ -36,6 +36,96 @@ st.markdown("""
         color: var(--text-primary);
     }
     
+    /* LOGO STYLES */
+    .logo-frame {
+        background: linear-gradient(145deg, #1e293b, #0f172a);
+        padding: 20px;
+        border-radius: 20px;
+        border: 2px solid #475569;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .logo-frame::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+    }
+    
+    .logo-frame:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        border-color: #3b82f6;
+    }
+    
+    .logo-frame-small {
+        background: linear-gradient(145deg, #1e293b, #0f172a);
+        padding: 15px;
+        border-radius: 15px;
+        border: 1px solid #475569;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .logo-frame-login {
+        background: linear-gradient(145deg, #1e293b, #0f172a);
+        padding: 25px;
+        border-radius: 20px;
+        border: 2px solid #475569;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem auto;
+        max-width: 150px;
+    }
+    
+    .logo-corner {
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        border: 2px solid #3b82f6;
+    }
+    
+    .logo-corner-tl {
+        top: 5px;
+        left: 5px;
+        border-right: none;
+        border-bottom: none;
+    }
+    
+    .logo-corner-tr {
+        top: 5px;
+        right: 5px;
+        border-left: none;
+        border-bottom: none;
+    }
+    
+    .logo-corner-bl {
+        bottom: 5px;
+        left: 5px;
+        border-right: none;
+        border-top: none;
+    }
+    
+    .logo-corner-br {
+        bottom: 5px;
+        right: 5px;
+        border-left: none;
+        border-top: none;
+    }
+    
     /* En-tête principal */
     .main-header {
         background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
@@ -305,6 +395,18 @@ st.markdown("""
     
     ::-webkit-scrollbar-thumb:hover {
         background: linear-gradient(180deg, #60a5fa, #34d399);
+    }
+    
+    /* Badge Licence */
+    .licence-badge {
+        background: linear-gradient(90deg, #8B5CF6, #3B82F6);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        display: inline-block;
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -582,23 +684,35 @@ if not st.session_state['user_role']:
     if not st.session_state['show_login']:
         # ============ PAGE D'ACCUEIL PUBLIQUE ============
         
-        # En-tête principal
+        # En-tête principal avec logo encadré
         col1, col2 = st.columns([1, 3])
         with col1:
-            st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=155)
+            st.markdown("""
+            <div class='logo-frame animate-fade-in'>
+                <div class='logo-corner logo-corner-tl'></div>
+                <div class='logo-corner logo-corner-tr'></div>
+                <div class='logo-corner logo-corner-bl'></div>
+                <div class='logo-corner logo-corner-br'></div>
+            """, unsafe_allow_html=True)
+            st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=120)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
         with col2:
             st.markdown("""
-            <div class='main-header'>
+            <div class='main-header animate-fade-in'>
                 <h1 style='color: white; margin: 0;'>📊 Portail de Suivi Académique EPL</h1>
                 <p style='color: rgba(255,255,255,0.9); font-size: 1.2rem; margin-top: 0.5rem;'>
-                    Université de Lomé - École Polytechnique de Lomé
+                    Université de Lomé - École Polytechnique
                 </p>
+                <div style='margin-top: 1rem;'>
+                    <span class='licence-badge'>Programme Licence</span>
+                </div>
             </div>
             """, unsafe_allow_html=True)
         
         # Section de recherche
         st.markdown("""
-        <div class='search-box'>
+        <div class='search-box animate-fade-in'>
             <h2 style='color: #f1f5f9;'>🔍 Consultez vos statistiques de présence</h2>
             <p style='color: #cbd5e1;'>Recherchez votre profil en entrant votre ID (matricule), nom ou prénom</p>
         </div>
@@ -649,24 +763,40 @@ if not st.session_state['user_role']:
             
             st.markdown("---")
             st.markdown(f"""
-            <div class='student-profile'>
-                <h2>👤 Profil Étudiant</h2>
+            <div class='student-profile animate-fade-in'>
+                <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;'>
+                    <div>
+                        <h2 style='margin: 0 0 0.5rem 0;'>👤 Profil Étudiant</h2>
+                        <p style='color: #cbd5e1; margin: 0;'>Informations académiques</p>
+                    </div>
+                    <span class='licence-badge'>Licence</span>
+                </div>
                 <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;'>
                     <div class='metric-card'>
-                        <h4>Nom Complet</h4>
-                        <p style='font-size: 1.3rem; font-weight: bold;'>{student['last_name']} {student['first_name']}</p>
+                        <h4 style='color: #94a3b8; margin-bottom: 0.5rem;'>Nom Complet</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold; margin: 0; color: #f1f5f9;'>
+                            {student['last_name']} {student['first_name']}
+                        </p>
                     </div>
                     <div class='metric-card'>
-                        <h4>Matricule (ID)</h4>
-                        <p style='font-size: 1.3rem; font-weight: bold; color: #3B82F6;'>{student['id']}</p>
+                        <h4 style='color: #94a3b8; margin-bottom: 0.5rem;'>Matricule (ID)</h4>
+                        <p style='font-size: 1.5rem; font-weight: bold; margin: 0; color: #3B82F6;'>
+                            {student['id']}
+                        </p>
+                        <small style='color: #64748b;'>Identifiant unique</small>
                     </div>
                     <div class='metric-card'>
-                        <h4>Filière</h4>
-                        <p style='font-size: 1.3rem; font-weight: bold; color: #10B981;'>{student['stream']}</p>
+                        <h4 style='color: #94a3b8; margin-bottom: 0.5rem;'>Filière</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold; margin: 0; color: #10B981;'>
+                            {student['stream']}
+                        </p>
                     </div>
                     <div class='metric-card'>
-                        <h4>Niveau</h4>
-                        <p style='font-size: 1.3rem; font-weight: bold; color: #8B5CF6;'>Licence</p>
+                        <h4 style='color: #94a3b8; margin-bottom: 0.5rem;'>Niveau</h4>
+                        <p style='font-size: 1.3rem; font-weight: bold; margin: 0; color: #8B5CF6;'>
+                            Licence
+                        </p>
+                        <small style='color: #64748b;'>Cycle académique</small>
                     </div>
                 </div>
             </div>
@@ -682,7 +812,7 @@ if not st.session_state['user_role']:
                     
                     with col1:
                         st.markdown(f"""
-                        <div class='metric-card'>
+                        <div class='metric-card animate-fade-in'>
                             <h4 style='color: #cbd5e1;'>Taux de Présence</h4>
                             <div class='highlight-stat'>{stats['attendance_percentage']}%</div>
                             <progress value="{stats['attendance_percentage']}" max="100" style="width: 100%; height: 12px;"></progress>
@@ -691,7 +821,7 @@ if not st.session_state['user_role']:
                     
                     with col2:
                         st.markdown(f"""
-                        <div class='metric-card'>
+                        <div class='metric-card animate-fade-in'>
                             <h4 style='color: #cbd5e1;'>Séances totales</h4>
                             <div class='highlight-stat'>{stats['total_sessions']}</div>
                             <p style='color: #94a3b8;'>Sessions enregistrées</p>
@@ -700,7 +830,7 @@ if not st.session_state['user_role']:
                     
                     with col3:
                         st.markdown(f"""
-                        <div class='metric-card'>
+                        <div class='metric-card animate-fade-in'>
                             <h4 style='color: #cbd5e1;'>Présences</h4>
                             <div class='highlight-stat' style='background: linear-gradient(90deg, #10B981, #34D399); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>{stats['present_count']}</div>
                             <p style='color: #94a3b8;'>Séances suivies</p>
@@ -709,7 +839,7 @@ if not st.session_state['user_role']:
                     
                     with col4:
                         st.markdown(f"""
-                        <div class='metric-card'>
+                        <div class='metric-card animate-fade-in'>
                             <h4 style='color: #cbd5e1;'>Absences</h4>
                             <div class='highlight-stat' style='background: linear-gradient(90deg, #EF4444, #F87171); -webkit-background-clip: text; -webkit-text-fill-color: transparent;'>{stats['absent_count']}</div>
                             <p style='color: #94a3b8;'>Séances manquées</p>
@@ -773,9 +903,11 @@ if not st.session_state['user_role']:
                     st.caption(f"🔄 Dernière mise à jour: {stats['last_updated']}")
                     
                     # Bouton pour nouvelle recherche
-                    if st.button("🔁 Nouvelle recherche", type="secondary"):
-                        del st.session_state['selected_student']
-                        st.rerun()
+                    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+                    with col_btn2:
+                        if st.button("🔁 Nouvelle recherche", type="secondary", use_container_width=True):
+                            del st.session_state['selected_student']
+                            st.rerun()
                     
                 else:
                     st.info("📊 Aucune statistique disponible pour cet étudiant pour le moment.")
@@ -787,7 +919,7 @@ if not st.session_state['user_role']:
         
         with col_info1:
             st.markdown("""
-            <div class='home-card'>
+            <div class='home-card animate-fade-in'>
                 <h3>🎯 Objectif du Portail</h3>
                 <p>Suivez votre assiduité et progressez dans votre parcours académique en Licence en toute transparence.</p>
             </div>
@@ -795,7 +927,7 @@ if not st.session_state['user_role']:
         
         with col_info2:
             st.markdown("""
-            <div class='home-card'>
+            <div class='home-card animate-fade-in'>
                 <h3>📈 Avantages</h3>
                 <ul style='padding-left: 20px;'>
                     <li>Statistiques en temps réel</li>
@@ -807,26 +939,43 @@ if not st.session_state['user_role']:
         
         with col_info3:
             st.markdown("""
-            <div class='home-card'>
+            <div class='home-card animate-fade-in'>
                 <h3>🔐 Accès Staff</h3>
                 <p>Les enseignants et délégués peuvent accéder au panel d'administration.</p>
             </div>
             """, unsafe_allow_html=True)
         
-        # Bouton accès administration
+        # Bouton accès administration avec logo encadré
         st.markdown("---")
-        col_admin = st.columns([3, 1, 3])
-        with col_admin[1]:
+        col_admin1, col_admin2, col_admin3 = st.columns([2, 1, 2])
+        with col_admin2:
+            st.markdown("""
+            <div class='logo-frame-small' style='margin-bottom: 1rem;'>
+            """, unsafe_allow_html=True)
+            st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=60)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
             if st.button("🔑 Accès Administration", use_container_width=True, type="secondary"):
                 st.session_state['show_login'] = True
                 st.rerun()
     
     else:
         # ============ FORMULAIRE DE LOGIN ============
-        st.markdown("<div style='height: 100px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 50px'></div>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.markdown("<h2 style='text-align: center;'>Connexion Administration</h2>", unsafe_allow_html=True)
+            # Logo encadré pour la page de login
+            st.markdown("""
+            <div class='logo-frame-login animate-fade-in'>
+                <div class='logo-corner logo-corner-tl'></div>
+                <div class='logo-corner logo-corner-tr'></div>
+                <div class='logo-corner logo-corner-bl'></div>
+                <div class='logo-corner logo-corner-br'></div>
+            """, unsafe_allow_html=True)
+            st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=80)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            st.markdown("<h2 style='text-align: center; margin-bottom: 2rem;'>Connexion Administration</h2>", unsafe_allow_html=True)
             
             login_card = st.container()
             with login_card:
@@ -839,11 +988,6 @@ if not st.session_state['user_role']:
                     border: 1px solid #475569;
                 '>
                 """, unsafe_allow_html=True)
-                
-                # Logo centré
-                col_logo1, col_logo2, col_logo3 = st.columns([1, 2, 1])
-                with col_logo2:
-                    st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=80)
                 
                 pwd = st.text_input("Mot de passe d'accès", type="password")
                 
@@ -859,7 +1003,7 @@ if not st.session_state['user_role']:
                 
                 st.markdown("</div>", unsafe_allow_html=True)
             
-            if st.button("← Retour à l'accueil public", type="secondary"):
+            if st.button("← Retour à l'accueil public", type="secondary", use_container_width=True):
                 st.session_state['show_login'] = False
                 if 'selected_student' in st.session_state:
                     del st.session_state['selected_student']
@@ -873,7 +1017,19 @@ if not st.session_state['user_role']:
 
 with st.sidebar:
     st.markdown("<div class='sidebar-content'>", unsafe_allow_html=True)
-    st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=80)
+    
+    # Logo encadré dans la sidebar
+    st.markdown("""
+    <div style='text-align: center; margin-bottom: 1.5rem;'>
+        <div class='logo-frame-small'>
+            <div class='logo-corner logo-corner-tl' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-tr' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-bl' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-br' style='width: 10px; height: 10px;'></div>
+    """, unsafe_allow_html=True)
+    st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=70)
+    st.markdown("</div></div>", unsafe_allow_html=True)
+    
     st.markdown(f"**Rôle :** {st.session_state['user_role']}")
     if st.session_state['user_scope'] != 'ALL':
         st.markdown(f"**Filière :** {st.session_state['user_scope']}")
@@ -905,7 +1061,21 @@ with st.sidebar:
 
 # --- PAGE: FAIRE L'APPEL ---
 if selected == "Faire l'Appel" or (selected == "Faire l'Appel (Force)" and st.session_state['user_role'] == 'ADMIN'):
-    st.title("📝 Nouvelle Feuille de Présence")
+    # En-tête avec logo encadré
+    col_logo, col_title = st.columns([1, 4])
+    with col_logo:
+        st.markdown("""
+        <div class='logo-frame-small'>
+            <div class='logo-corner logo-corner-tl' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-tr' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-bl' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-br' style='width: 10px; height: 10px;'></div>
+        """, unsafe_allow_html=True)
+        st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=60)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    with col_title:
+        st.title("📝 Nouvelle Feuille de Présence")
     
     # Sélecteur de filière
     if st.session_state['user_role'] == 'DELEGATE':
@@ -970,7 +1140,22 @@ if selected == "Faire l'Appel" or (selected == "Faire l'Appel (Force)" and st.se
 
 # --- PAGE: CORRECTION D'ERREURS ---
 elif selected == "Correction d'Erreurs":
-    st.title("🛠️ Correction d'Appel (Admin)")
+    # En-tête avec logo encadré
+    col_logo, col_title = st.columns([1, 4])
+    with col_logo:
+        st.markdown("""
+        <div class='logo-frame-small'>
+            <div class='logo-corner logo-corner-tl' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-tr' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-bl' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-br' style='width: 10px; height: 10px;'></div>
+        """, unsafe_allow_html=True)
+        st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=60)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    with col_title:
+        st.title("🛠️ Correction d'Appel (Admin)")
+    
     st.info("Permet de modifier rétroactivement les présences d'une session passée.")
     
     col_f, col_s = st.columns(2)
@@ -1044,6 +1229,29 @@ elif selected == "Correction d'Erreurs":
 # --- PAGES STATISTIQUES (PROF & ADMIN) ---
 elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", "Explorer les Données"]:
     
+    # En-tête avec logo encadré
+    col_logo, col_title = st.columns([1, 4])
+    with col_logo:
+        st.markdown("""
+        <div class='logo-frame-small'>
+            <div class='logo-corner logo-corner-tl' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-tr' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-bl' style='width: 10px; height: 10px;'></div>
+            <div class='logo-corner logo-corner-br' style='width: 10px; height: 10px;'></div>
+        """, unsafe_allow_html=True)
+        st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=60)
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    with col_title:
+        if selected == "Tableau de Bord Prof":
+            st.title("📊 Tableau de Bord Académique")
+        elif selected == "Stats Globales":
+            st.title("📈 Statistiques Globales")
+        elif selected == "Alertes Absences":
+            st.title("🚨 Alertes Absences")
+        elif selected == "Explorer les Données":
+            st.title("🔎 Explorateur de Données")
+    
     # Chargement unique des données
     df = pd.DataFrame(get_global_stats())
     
@@ -1052,8 +1260,6 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
     else:
         # --- SOUS-PAGE : DASHBOARD ---
         if selected in ["Tableau de Bord Prof", "Stats Globales"]:
-            st.title("📊 Tableau de Bord Académique")
-            
             # Filtres
             filieres_dispo = df['stream'].unique()
             filieres = st.multiselect("Filtrer par Filière", filieres_dispo, default=filieres_dispo)
@@ -1118,4 +1324,3 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
         elif selected == "Explorer les Données":
             st.title("🔎 Explorateur Brut")
             st.dataframe(df, use_container_width=True, hide_index=True)
-
