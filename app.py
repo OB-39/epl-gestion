@@ -752,7 +752,7 @@ if not st.session_state['user_role']:
         st.markdown("</div></div>", unsafe_allow_html=True)
         
        # CONTENU PRINCIPAL
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
+    st.markdown('<div class="main-container">', unsafe_allow_html=True)
         
 # EN-TÊTE
 col1, col2 = st.columns([1, 2])
@@ -1767,5 +1767,6 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
