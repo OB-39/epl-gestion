@@ -78,18 +78,25 @@ def get_students(stream):
     return supabase.table('students').select("*").eq('stream', stream).order('last_name').execute().data
 
 # Sauvegarde Appel (Délégué)
-def save_attendance(course_id, date, present_ids, all_students):
+def save_attendance(session_id, attendance_data):
+    """
+    Enregistre ou met à jour les présences pour une session donnée.
+    attendance_data: liste de dicts [{'student_id': '...', 'session_id': '...', 'status': '...'}]
+    """
     try:
-        # 1. Créer Session
-        sess = supabase.table('sessions').insert({"course_id": course_id, "date_time": date.isoformat()}).execute()
-        sess_id = sess.data[0]['id']
-        # 2. Créer Présences
-        records = [{"session_id": sess_id, "student_id": s['id'], "status": "PRESENT" if s['id'] in present_ids else "ABSENT"} for s in all_students]
-        supabase.table('attendance').insert(records).execute()
-        return True
+        # UTILISATION DE UPSERT au lieu de INSERT
+        # on_conflict: spécifie les colonnes qui définissent l'unicité
+        response = supabase.table('attendance').upsert(
+            attendance_data, 
+            on_conflict='session_id, student_id' 
+        ).execute()
+        
+        st.success(f"Succès ! {len(attendance_data)} enregistrements mis à jour.")
+        return response
+        
     except Exception as e:
-        st.error(f"Erreur DB: {e}")
-        return False
+        st.error(f"Erreur technique lors de l'enregistrement : {str(e)}")
+        return None
 
 # --- FONCTIONS SUPER ADMIN (CORRECTION) ---
 def get_past_sessions(stream):
@@ -387,3 +394,4 @@ elif selected == "Explorer les Données":
         use_container_width=True,
         hide_index=True 
     )
+
