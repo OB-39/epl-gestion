@@ -715,6 +715,54 @@ def update_attendance_correction(session_id, updated_presence_map, all_students)
         st.error(str(e))
         return False
 
+
+@st.cache_data(ttl=60)
+def get_delegate_activity_log():
+    """
+    Récupère la liste des sessions enregistrées et les informations de création.
+    La date et l'heure de création sont implicitement 'date_time' dans la table 'sessions'.
+    """
+    try:
+        # Nous supposons que la date_time de la session est proche de l'heure de remplissage.
+        # Nous joignons les sessions aux cours pour obtenir la filière (scope).
+        result = supabase.table('sessions') \
+            .select("id, date_time, course_id, courses(name, stream_target)") \
+            .order('date_time', desc=True) \
+            .limit(100) \
+            .execute()
+            
+        data = result.data
+        if not data:
+            return pd.DataFrame()
+
+        log_data = []
+        for row in data:
+            course_name = row.get('courses', {}).get('name', 'N/A')
+            stream = row.get('courses', {}).get('stream_target', 'N/A')
+            session_id = row.get('id')
+            
+            # Pour l'instant, l'utilisateur créateur n'est pas stocké dans la BD.
+            # Nous utilisons la filière (stream) comme ID du Délégué responsable.
+            
+            # Déterminer si la session est dans le passé pour l'état de remplissage
+            session_date = datetime.fromisoformat(row['date_time'])
+            status = "Complet" if session_date < datetime.now() else "Planifié"
+            
+            log_data.append({
+                'Session_ID': session_id,
+                'Filière_Scope': stream,
+                'Matière': course_name,
+                'Date_Session': session_date.strftime("%d/%m/%Y"),
+                'Heure_Remplissage_Estimée': session_date.strftime("%H:%M:%S"),
+                'Statut_Remplissage': status
+            })
+            
+        return pd.DataFrame(log_data)
+    
+    except Exception as e:
+        st.warning(f"Impossible de charger le journal d'activité: {e}")
+        return pd.DataFrame()
+
 def get_global_stats():
     try:
         return supabase.from_('student_stats').select("*").execute().data
@@ -1350,8 +1398,12 @@ elif selected in ["📊 Tableau de Bord", "📈 Stats Globales", "🚨 Alertes A
 # ----------------------------------------------------------------------------------
 elif selected == "🛡️ Super Admin":
     admin_header("Super Admin & Outils Avancés", "🛡️")
-    tab_etudiant, tab_export, tab_autres = st.tabs(["👨‍🎓 Gestion des Étudiants", "📥 Exporter les Données", "⚙️ Maintenance"])
-    
+    tab_etudiant, tab_export, tab_autres, tab_activite = st.tabs([
+    "👨‍🎓 Gestion des Étudiants", 
+    "📥 Exporter les Données", 
+    "⚙️ Maintenance", 
+    "⏳ Journal d'Activité" # Nouvel onglet
+    ])    
     # =========================================================
     # 1.1. Onglet Gestion des Étudiants
     # =========================================================
@@ -1726,6 +1778,51 @@ elif selected == "🛡️ Super Admin":
             except Exception as e:
                 # Afficher une erreur plus générique si l'erreur PostgreSQL n'est pas informative
                 st.error(f"❌ Erreur lors de la sauvegarde. Détails techniques: {e}")
+
+    # =========================================================
+    # 1.4. NOUVEL Onglet Journal d'Activité des Délégués
+    # =========================================================
+        with tab_activite:
+        st.header("⏳ Journal d'Activité des Sessions")
+        st.info("Affiche les 100 dernières sessions enregistrées, avec l'heure de la séance comme indicateur d'heure de remplissage.")
+        
+        df_activity = get_delegate_activity_log()
+        
+        if df_activity.empty:
+            st.warning("Aucune donnée de session trouvée pour le moment.")
+        else:
+            
+            # FILTRES
+            col_f1, col_f2 = st.columns([1, 2])
+            filieres = df_activity['Filière_Scope'].unique()
+            selected_stream = col_f1.selectbox("Filtrer par Filière (Délégué)", ['TOUTES'] + list(filieres))
+            
+            if selected_stream != 'TOUTES':
+                df_filtered_activity = df_activity[df_activity['Filière_Scope'] == selected_stream]
+            else:
+                df_filtered_activity = df_activity
+
+            col_f2.metric(
+                "Total de sessions affichées", 
+                len(df_filtered_activity), 
+                f"Dernière mise à jour : {datetime.now().strftime('%H:%M:%S')}"
+            )
+            
+            st.dataframe(
+                df_filtered_activity,
+                column_order=[
+                    "Date_Session", 
+                    "Heure_Remplissage_Estimée", 
+                    "Filière_Scope", 
+                    "Matière", 
+                    "Statut_Remplissage"
+                ],
+                column_config={
+                    "Heure_Remplissage_Estimée": st.column_config.TimeColumn("Heure (Proxy)")
+                },
+                hide_index=True,
+                use_container_width=True
+            )
 # ----------------------------------------------------------------------------------
 # FIN DE LA SECTION SUPER ADMIN
 # ----------------------------------------------------------------------------------
@@ -1759,5 +1856,6 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
