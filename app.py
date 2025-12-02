@@ -585,13 +585,13 @@ if not st.session_state['user_role']:
         # En-tête principal
         col1, col2 = st.columns([1, 3])
         with col1:
-            st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=120)
+            st.image("https://tse4.mm.bing.net/th/id/OIP.AQ-vlqgp9iyDGW8ag9oCsgHaHS?rs=1&pid=ImgDetMain&o=7&rm=3", width=155)
         with col2:
             st.markdown("""
             <div class='main-header'>
                 <h1 style='color: white; margin: 0;'>📊 Portail de Suivi Académique EPL</h1>
                 <p style='color: rgba(255,255,255,0.9); font-size: 1.2rem; margin-top: 0.5rem;'>
-                    Université de Lomé - École Polytechnique
+                    Université de Lomé - École Polytechnique de Lomé
                 </p>
             </div>
             """, unsafe_allow_html=True)
@@ -1118,3 +1118,4 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
         elif selected == "Explorer les Données":
             st.title("🔎 Explorateur Brut")
             st.dataframe(df, use_container_width=True, hide_index=True)
+
