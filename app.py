@@ -78,57 +78,25 @@ def get_students(stream):
     return supabase.table('students').select("*").eq('stream', stream).order('last_name').execute().data
 
 # Sauvegarde Appel (Délégué)
-def save_attendance(course_id, date, present_ids, all_students):
+def save_attendance(session_id, attendance_data):
+    """
+    Enregistre ou met à jour les présences pour une session donnée.
+    attendance_data: liste de dicts [{'student_id': '...', 'session_id': '...', 'status': '...'}]
+    """
     try:
-        # Formatage standard de la date
-        # Astuce : On s'assure que la date est au même format que dans la DB
-        date_iso = date.isoformat() 
-
-        # --- ÉTAPE 1 : GESTION INTELLIGENTE DE LA SESSION ---
-        # On vérifie d'abord si une session existe déjà pour ce Cours + Date
-        response_session = supabase.table('sessions')\
-            .select("id")\
-            .eq("course_id", course_id)\
-            .eq("date_time", date_iso)\
-            .execute()
-
-        if response_session.data:
-            # CAS A : La session existe déjà -> On récupère son ID
-            sess_id = response_session.data[0]['id']
-            # st.info(f"Mise à jour de la session existante (ID: {sess_id})") # Optionnel : pour debug
-        else:
-            # CAS B : Nouvelle session -> On la crée
-            new_sess = supabase.table('sessions').insert({
-                "course_id": course_id, 
-                "date_time": date_iso
-            }).execute()
-            sess_id = new_sess.data[0]['id']
-
-        # --- ÉTAPE 2 : ENREGISTREMENT DES PRÉSENCES (BATCH UPSERT) ---
-        records = []
-        for s in all_students:
-            # Détermination du statut
-            statut = "PRESENT" if s['id'] in present_ids else "ABSENT"
-            
-            records.append({
-                "session_id": sess_id,
-                "student_id": s['id'],
-                "status": statut
-            })
-
-        # Utilisation de .upsert() au lieu de .insert()
-        # Cela permet de METTRE À JOUR le statut si l'étudiant est déjà noté
-        supabase.table('attendance').upsert(
-            records, 
-            on_conflict='session_id, student_id'
+        # UTILISATION DE UPSERT au lieu de INSERT
+        # on_conflict: spécifie les colonnes qui définissent l'unicité
+        response = supabase.table('attendance').upsert(
+            attendance_data, 
+            on_conflict='session_id, student_id' 
         ).execute()
-
-        st.success("✅ Appel enregistré avec succès !")
-        return True
-
+        
+        st.success(f"Succès ! {len(attendance_data)} enregistrements mis à jour.")
+        return response
+        
     except Exception as e:
-        st.error(f"❌ Erreur Technique : {e}")
-        return False
+        st.error(f"Erreur technique lors de l'enregistrement : {str(e)}")
+        return None
 
 # --- FONCTIONS SUPER ADMIN (CORRECTION) ---
 def get_past_sessions(stream):
@@ -426,5 +394,6 @@ elif selected == "Explorer les Données":
         use_container_width=True,
         hide_index=True 
     )
+
 
 
