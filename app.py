@@ -85,52 +85,6 @@ def get_students(stream):
     """Récupère la liste des étudiants"""
     return supabase.table('students').select("*").eq('stream', stream).order('last_name').execute().data
 
-# -- Public search helpers --
-
-@st.cache_data(ttl=60)
-def search_students_public(query, stream=None):
-    """
-    Recherche publique minimale pour permettre aux étudiants de retrouver leur profil.
-    Recherche sur l'ID exact (si query numérique) ou sur le nom de famille (ilike).
-    Retourne une liste d'étudiants (dicts).
-    """
-    try:
-        if not query:
-            return []
-        q = query.strip()
-        results = []
-        # Essayer par ID si query ressemble à un entier
-        if q.isdigit():
-            resp = supabase.table('students').select("*").eq('id', int(q))
-            if stream and stream != "Toutes":
-                resp = resp.eq('stream', stream)
-            resp = resp.execute()
-            results = resp.data or []
-            if results:
-                return results
-
-        # Recherche par nom (ilike)
-        pattern = f"%{q}%"
-        resp = supabase.table('students').select("*").ilike('last_name', pattern)
-        if stream and stream != "Toutes":
-            resp = resp.eq('stream', stream)
-        resp = resp.order('last_name').execute()
-        results = resp.data or []
-        return results
-    except Exception:
-        return []
-
-@st.cache_data(ttl=60)
-def get_student_stats(student_id):
-    """Récupère des statistiques publiques limitées depuis la vue student_stats."""
-    try:
-        resp = supabase.from_('student_stats').select("*").eq('student_id', student_id).execute()
-        if resp.data:
-            return resp.data[0]
-        return None
-    except Exception:
-        return None
-
 # -- Écritures de données (Critique) --
 
 def save_attendance(course_id, date_obj, present_ids, all_students):
@@ -244,49 +198,12 @@ def get_global_stats():
 
 get_session_state()
 
-# 1. PAGE PUBLIQUE / LOGIN
+# 1. LOGIN SCREEN
 if not st.session_state['user_role']:
-    # Afficher une page d'accueil publique à gauche et le formulaire de connexion à droite
-    col_public, col_login = st.columns([2, 1])
-    with col_public:
+    col1, col2, col3 = st.columns([1,1,1])
+    with col2:
         st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=150)
-        st.title("Accueil Public - Rechercher votre profil")
-        st.markdown("Recherchez votre fiche étudiante par Nom, Prénom ou ID. Seuls des champs publics sont affichés (filière, nom, prénom et un résumé des présences si disponible).")
-        
-        # Choix de filière pour filtrer la recherche
-        filieres = ["Toutes", "LT", "GC", "IABD", "IS", "GE", "GM"]
-        public_stream = st.selectbox("Filière (optionnel)", filieres, index=0)
-        public_query = st.text_input("Nom, Prénom ou ID", placeholder="ex: Doe ou 12345")
-        if st.button("🔎 Rechercher", use_container_width=False):
-            with st.spinner("Recherche en cours..."):
-                results = search_students_public(public_query, public_stream)
-                if not results:
-                    st.info("Aucun résultat trouvé. Vérifiez l'orthographe ou essayez un autre critère.")
-                else:
-                    st.success(f"{len(results)} résultat(s) trouvé(s)")
-                    for s in results:
-                        st.divider()
-                        stats = get_student_stats(s['id'])
-                        cols = st.columns([2, 3])
-                        with cols[0]:
-                            st.markdown(f"**{s.get('last_name','')} {s.get('first_name','')}**")
-                            st.markdown(f"- Filière : **{s.get('stream','-')}**")
-                            st.markdown(f"- ID : `{s.get('id','-')}`")
-                        with cols[1]:
-                            if stats:
-                                att = stats.get('attendance_percentage', None)
-                                absent_count = stats.get('absent_count', None)
-                                if att is not None:
-                                    st.metric("Taux de présence", f"{att:.1f}%")
-                                if absent_count is not None:
-                                    st.markdown(f"- Absences totales : **{absent_count}**")
-                            else:
-                                st.info("Aucune statistique publique disponible pour cet étudiant.")
-                    st.divider()
-                    st.markdown("Si vous ne trouvez pas votre fiche, contactez l'administration.")
-    with col_login:
-        st.image("https://univ-lome.tg/sites/default/files/logo-ul.png", width=80)
-        st.markdown("<h4 style='text-align: left;'>Espace Sécurisé</h4>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center;'>Portail Sécurisé EPL</h3>", unsafe_allow_html=True)
         pwd = st.text_input("Mot de passe d'accès", type="password")
         if st.button("Connexion", use_container_width=True):
             if login(pwd):
@@ -295,7 +212,6 @@ if not st.session_state['user_role']:
                 st.rerun()
             else:
                 st.error("Accès Refusé.")
-    # On stoppe ici pour les utilisateurs non authentifiés (la page publique est affichée)
     st.stop()
 
 # 2. LOGGED IN INTERFACE
