@@ -17,72 +17,297 @@ st.set_page_config(
 # --- CSS MODERNE ---
 st.markdown("""
 <style>
+    /* Variables de couleurs */
+    :root {
+        --dark-primary: #0f172a;
+        --dark-secondary: #1e293b;
+        --dark-accent: #334155;
+        --primary-blue: #3b82f6;
+        --blue-light: #60a5fa;
+        --green-accent: #10b981;
+        --red-accent: #ef4444;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+    }
+    
+    /* Fond principal */
+    .stApp {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: var(--text-primary);
+    }
+    
+    /* En-tête principal */
     .main-header {
-        background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
-        padding: 2rem;
-        border-radius: 15px;
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        padding: 3rem;
+        border-radius: 20px;
         color: white;
         margin-bottom: 2rem;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        border: 1px solid #475569;
+        position: relative;
+        overflow: hidden;
     }
+    
+    .main-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+    }
+    
+    /* Cartes */
     .home-card {
-        background-color: white;
+        background: linear-gradient(145deg, #1e293b, #0f172a);
         padding: 25px;
         border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
         margin: 1rem 0;
+        transition: all 0.3s ease;
+        border: 1px solid #334155;
+    }
+    
+    .home-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+        border-color: #3b82f6;
+    }
+    
+    .metric-card { 
+        background: linear-gradient(145deg, #1e293b, #0f172a);
+        padding: 25px; 
+        border-radius: 15px; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        text-align: center; 
+        border-left: 5px solid var(--primary-blue);
+        border: 1px solid #334155;
         transition: transform 0.3s ease;
     }
-    .home-card:hover {
+    
+    .metric-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
     }
-    .metric-card { 
-        background-color: white; 
-        padding: 20px; 
-        border-radius: 10px; 
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        text-align: center; 
-        border-left: 5px solid #1E3A8A;
-    }
+    
+    /* Profil étudiant */
     .student-profile {
-        background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-        padding: 2rem;
-        border-radius: 15px;
-        border: 1px solid #e0e7ff;
+        background: linear-gradient(145deg, #1e293b, #0f172a);
+        padding: 2.5rem;
+        border-radius: 20px;
+        border: 1px solid #475569;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        position: relative;
+        overflow: hidden;
     }
+    
+    .student-profile::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+    }
+    
+    /* Statistiques */
     .highlight-stat {
-        font-size: 2.5rem;
+        font-size: 3rem;
         font-weight: bold;
-        color: #1E3A8A;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         text-align: center;
+        font-family: 'Arial Black', sans-serif;
     }
+    
+    /* Barre de recherche */
     .search-box {
-        background-color: white;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        background: linear-gradient(145deg, #1e293b, #0f172a);
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.25);
         margin-bottom: 2rem;
+        border: 1px solid #475569;
+        position: relative;
     }
+    
+    .search-box::before {
+        content: '🔍';
+        position: absolute;
+        top: -15px;
+        left: 30px;
+        font-size: 2rem;
+        background: var(--dark-primary);
+        padding: 0 10px;
+    }
+    
+    /* Boutons */
     .stButton>button { 
-        border-radius: 8px; 
+        border-radius: 12px; 
         font-weight: bold; 
-        padding: 0.5rem 2rem;
+        padding: 0.8rem 2rem;
+        border: none;
+        transition: all 0.3s ease;
+        font-size: 1rem;
     }
-    h1, h2, h3 { color: #1E3A8A; }
-    div[data-testid="stMetricValue"] { color: #1E3A8A; font-size: 24px; }
-    /* Amélioration visuelle des tableaux */
-    .stDataFrame { border-radius: 10px; overflow: hidden; }
+    
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+    }
+    
+    /* Inputs */
+    .stTextInput>div>div>input {
+        background: #0f172a !important;
+        color: var(--text-primary) !important;
+        border: 1px solid #475569 !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .stTextInput>div>div>input:focus {
+        border-color: var(--primary-blue) !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    }
+    
+    /* Titres */
+    h1, h2, h3, h4 {
+        color: var(--text-primary) !important;
+        font-weight: 700 !important;
+    }
+    
+    h1 {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2.8rem !important;
+    }
+    
+    h2 {
+        color: var(--text-primary) !important;
+        font-size: 2.2rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    
+    /* Texte */
+    p, li, .stMarkdown {
+        color: var(--text-secondary) !important;
+    }
+    
+    /* Progress bar */
+    progress {
+        width: 100%;
+        height: 12px;
+        border-radius: 6px;
+        background: #334155;
+        overflow: hidden;
+    }
+    
+    progress::-webkit-progress-bar {
+        background: #334155;
+        border-radius: 6px;
+    }
+    
+    progress::-webkit-progress-value {
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        border-radius: 6px;
+    }
+    
+    /* Tableaux */
+    .stDataFrame {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #475569;
+    }
+    
+    /* Sidebar */
+    .css-1d391kg, .css-12oz5g7 {
+        background: var(--dark-primary) !important;
+    }
+    
     .sidebar-content {
-        padding: 1rem;
+        padding: 1.5rem;
+        background: var(--dark-secondary);
+        border-radius: 15px;
+        border: 1px solid #334155;
     }
-    /* Style pour la barre de progression */
-    .stProgress > div > div > div > div {
-        background-color: #1E3A8A;
+    
+    /* Onglets */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2px;
+        background: #1e293b;
+        padding: 5px;
+        border-radius: 12px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa) !important;
+    }
+    
+    /* Badges */
+    .stream-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        color: white;
+    }
+    
+    /* Animation subtile */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+    
+    /* Éléments spécifiques */
+    .logo-container {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 20px;
+        border-radius: 15px;
+        display: inline-block;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    /* Scrollbar personnalisée */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--dark-secondary);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #3b82f6, #10b981);
+        border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #60a5fa, #34d399);
     }
 </style>
 """, unsafe_allow_html=True)
-
 # --- 2. GESTION DES MOTS DE PASSE ---
 CREDENTIALS = {
     "ADMIN": "light3993",
@@ -874,3 +1099,4 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
         elif selected == "Explorer les Données":
             st.title("🔎 Explorateur Brut")
             st.dataframe(df, use_container_width=True, hide_index=True)
+
