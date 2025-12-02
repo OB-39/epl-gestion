@@ -814,19 +814,6 @@ if not st.session_state['user_role']:
         st.markdown('<div class="main-container">', unsafe_allow_html=True)
         
         # EN-TÊTE
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            st.markdown(f"""
-            <div class="logo-frame animate-fade-in">
-                <div class='logo-corner logo-corner-tl'></div>
-                <div class='logo-corner logo-corner-tr'></div>
-                <div class='logo-corner logo-corner-bl'></div>
-                <div class='logo-corner logo-corner-br'></div>
-                <img src="{LOGO_URL}" alt="Logo EPL">
-            </div>
-            """, unsafe_allow_html=True)
-            
-        with col2:
             st.markdown("""
             <div class='main-header animate-fade-in'>
                 <h1 style='margin: 0;'>Suivi Académique en Temps Réel</h1>
@@ -1872,6 +1859,7 @@ window.addEventListener('resize', updateScreenSize);
 # =========================================================
 # 8. FIN DU CODE
 # =========================================================
+
 
 
 
