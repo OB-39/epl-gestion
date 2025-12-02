@@ -695,7 +695,7 @@ if not st.session_state['user_role']:
                 <div class='logo-corner logo-corner-tr'></div>
                 <div class='logo-corner logo-corner-bl'></div>
                 <div class='logo-corner logo-corner-br'></div>
-                <img src="{img_url}" class="logo-img" width="120">
+                <img src="{img_url}" class="logo-img">
             </div>
             """, unsafe_allow_html=True)
             
@@ -1326,4 +1326,5 @@ elif selected in ["Tableau de Bord Prof", "Stats Globales", "Alertes Absences", 
         elif selected == "Explorer les Données":
             st.title("🔎 Explorateur Brut")
             st.dataframe(df, use_container_width=True, hide_index=True)
+
 
